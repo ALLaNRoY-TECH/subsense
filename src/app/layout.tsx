@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
-import { Outfit, Geist_Mono } from "next/font/google";
+import { Anton, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const anton = Anton({
+  variable: "--font-anton",
+  weight: "400",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -27,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${anton.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[#0A0A0A] text-white flex flex-col font-sans selection:bg-[#EF233C] selection:text-white">
         {children}
@@ -35,4 +41,5 @@ export default function RootLayout({
     </html>
   );
 }
+
 

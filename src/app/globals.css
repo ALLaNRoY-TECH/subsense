@@ -1,27 +1,41 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0A0A0A;
-  --color-foreground: #FFFFFF;
+  --color-background: #0a0a0a;
+  --color-foreground: #ffffff;
   --color-deep-red: #D90429;
   --color-crimson: #EF233C;
   --color-silver: #C0C0C0;
-  --color-matte-black: #0A0A0A;
   
-  --font-sans: var(--font-outfit), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-anton), sans-serif;
+  --font-mono: var(--font-mono), monospace;
 }
 
 :root {
-  --background: #0A0A0A;
-  --foreground: #FFFFFF;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
 }
 
 body {
-  background-color: #0A0A0A;
-  color: #FFFFFF;
-  font-family: var(--font-outfit), system-ui, -apple-system, sans-serif;
+  background-color: #0a0a0a;
+  color: #ffffff;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background Noise/Grain Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  opacity: .035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
 /* Custom scrollbars */
@@ -30,33 +44,27 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  background: #0a0a0a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1F1F1F;
+  background: #1d1d20;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #EF233C;
 }
 
-/* Custom Glassmorphism Utility */
-.glass-panel {
-  background: rgba(10, 10, 10, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-panel-heavy {
-  background: rgba(10, 10, 10, 0.9);
+/* Custom Glassmorphism Classes */
+.glass {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
 }
 
 .text-glow {
-  text-shadow: 0 0 10px rgba(239, 35, 60, 0.4);
+  text-shadow: 0 0 15px rgba(239, 35, 60, 0.4);
 }
 
 .border-glow:hover {
@@ -69,25 +77,80 @@ body {
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Custom keyframes & animation helpers */
+/* Capsule Layout Styling */
+.capsule {
+  position: relative;
+  width: 128px;
+  height: 300px;
+  border-radius: 64px;
+  background: linear-gradient(100deg, #3b3b3e 0%, #C0C0C0 18%, #f4f4f6 38%, #C0C0C0 52%, #6e6e72 72%, #3b3b3e 100%);
+  box-shadow: 0 0 80px rgba(217, 4, 41, .45), inset 0 0 30px rgba(0, 0, 0, .35);
+  overflow: hidden;
+  z-index: 3;
+}
+
+.capsule::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38%;
+  height: 34%;
+  background: linear-gradient(180deg, #7a0419, #D90429 35%, #EF233C 60%, #7a0419);
+  box-shadow: 0 0 30px rgba(217, 4, 41, .6) inset;
+}
+
+.capsule-cap {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 34px;
+  border-radius: 14px 14px 6px 6px;
+  background: linear-gradient(180deg, #dcdcdf, #8c8c90);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .4);
+}
+
+/* Keyframes & Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes rise {
+  0% { opacity: 0; transform: translateY(0) scale(.8); }
+  10% { opacity: .9; }
+  85% { opacity: .55; }
+  100% { opacity: 0; transform: translateY(-480px) scale(1.05); }
+}
+
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
 }
 
-.animate-float-slow {
+.animate-spin-slow {
+  animation: spin 38s linear infinite;
+}
+
+.animate-spin-reverse-slow {
+  animation: spin-reverse 54s linear infinite;
+}
+
+.animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-.animate-float-medium {
-  animation: float 4s ease-in-out infinite;
+.animate-rise-bubble {
+  animation: rise 7s ease-in infinite;
 }
 
-.animate-float-fast {
-  animation: float 3s ease-in-out infinite;
-}
 
