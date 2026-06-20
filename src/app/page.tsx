@@ -252,9 +252,11 @@ export default function Home() {
             <div className="absolute w-[430px] h-[430px] rounded-full border border-dashed border-white/[0.04] animate-spin-reverse-slow" />
 
             {/* Diet Coke Inspired Can Capsule Container */}
-            <div className="capsule">
+            <div className="relative">
               <div className="capsule-cap" />
-              <div className="capsule-label font-display text-white">SubSense</div>
+              <div className="capsule">
+                <div className="capsule-label font-display text-white">SubSense</div>
+              </div>
             </div>
 
             {/* Floating Brand Badges (using actual brand SVG mappings!) */}

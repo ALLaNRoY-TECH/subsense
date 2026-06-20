@@ -153,4 +153,95 @@ body::before {
   animation: rise 7s ease-in infinite;
 }
 
+/* Capsule Title Label Styling */
+.capsule-label {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: var(--font-display), sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #0a0a0a;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Badge (floating subscription icon) styling */
+.badge {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.badge:hover {
+  border-color: #EF233C;
+  transform: scale(1.1) translateY(-5px);
+}
+
+.badge svg, .badge img {
+  width: 28px;
+  height: 28px;
+}
+
+/* Positioning for the 5 badges around the capsule */
+.badge.b1 {
+  top: 18%;
+  left: 15%;
+}
+
+.badge.b2 {
+  top: 48%;
+  left: 8%;
+}
+
+.badge.b3 {
+  top: 22%;
+  right: 12%;
+}
+
+.badge.b4 {
+  top: 52%;
+  right: 6%;
+}
+
+.badge.b5 {
+  bottom: 12%;
+  left: 22%;
+}
+
+/* Bubble (rising price bubble) styling */
+.bubble {
+  position: absolute;
+  bottom: -20px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  background: rgba(239, 35, 60, 0.08);
+  border: 1px solid rgba(239, 35, 60, 0.18);
+  padding: 4px 10px;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: 0 4px 12px rgba(239, 35, 60, 0.1);
+  white-space: nowrap;
+}
+
+
 
