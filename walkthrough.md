@@ -29,7 +29,7 @@ We successfully completed all Phase 3 upgrades for **SubSense**, adding advanced
 ### ♊ Gemini AI Insights & Chat Bot
 - **Endpoint**: [insights/route.ts](file:///c:/Users/allan/Documents/project%20subscirpiton/src/app/api/insights/route.ts)
 - **Features**:
-  - **GET**: Computes monthly outlays, category charts, and annual spend projections. Feeds real user subscriptions directly to `gemini-1.5-flash` to return structured financial summaries, savings audits, health scores, recommendations, and witty personal roasts.
+  - **GET**: Computes monthly outlays, category charts, and annual spend projections. Feeds real user subscriptions directly to `gemini-2.5-flash` to return structured financial summaries, savings audits, health scores, recommendations, and witty personal roasts.
   - **POST**: Handles interactive AI chat queries with real subscription context so the AI can provide immediate cancel advice or answer spending queries.
   - **Robust Timeout Protection (8s)**: Rejects hung Google API request handshakes after 8 seconds (pre-empting Vercel serverless function limits of 10s on Hobby tier) to output clean JSON error messages rather than hanging the user interface.
   - **Try/Catch & Console Audit Logs**: Captures and logs all requests and responses in detail to the console.

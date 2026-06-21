@@ -3,6 +3,9 @@ import { cookies } from "next/headers";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { supabase } from "@/lib/supabase";
 
+const MODEL_NAME = "gemini-2.5-flash";
+console.log("Using Gemini model:", MODEL_NAME);
+
 // GET: Fetch structured AI insights dashboard
 export async function GET() {
   const cookieStore = await cookies();
@@ -69,10 +72,34 @@ Generate a structured JSON output with the exact keys:
 }
 Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`\`json).`;
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt
-    });
+    let modelName = "gemini-2.5-flash";
+    let model;
+    console.log("Gemini API Key Present:", !!process.env.GEMINI_API_KEY);
+    console.log("Using Gemini Model:", modelName);
+
+    try {
+      model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: systemPrompt
+      });
+    } catch (err) {
+      console.warn("gemini-2.5-flash not supported by SDK, trying gemini-2.0-flash. Error:", err);
+      modelName = "gemini-2.0-flash";
+      console.log("Gemini API Key Present:", !!process.env.GEMINI_API_KEY);
+      console.log("Using Gemini Model:", modelName);
+      try {
+        model = genAI.getGenerativeModel({ 
+          model: modelName,
+          systemInstruction: systemPrompt
+        });
+      } catch (innerErr) {
+        console.error("Gemini Error:", innerErr);
+        return NextResponse.json(
+          { error: String(innerErr) },
+          { status: 500 }
+        );
+      }
+    }
 
     console.log("=== GEMINI GET INSIGHTS DEBUG INFO ===");
     console.log("User ID:", userId);
@@ -95,8 +122,43 @@ Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`
       ]);
       console.log("[GET] Gemini response received successfully.");
     } catch (geminiError) {
-      console.error("!!! GEMINI GET API CALL EXCEPTION !!!", geminiError);
-      throw geminiError;
+      // Check if we can fallback to gemini-2.0-flash
+      if (modelName === "gemini-2.5-flash") {
+        console.warn("gemini-2.5-flash call failed, trying fallback to gemini-2.0-flash. Error:", geminiError);
+        modelName = "gemini-2.0-flash";
+        console.log("Gemini API Key Present:", !!process.env.GEMINI_API_KEY);
+        console.log("Using Gemini Model:", modelName);
+        try {
+          model = genAI.getGenerativeModel({ 
+            model: modelName,
+            systemInstruction: systemPrompt
+          });
+          console.log("[GET] Initiating Gemini generateContent request with fallback model...");
+          text = await Promise.race([
+            (async () => {
+              const result = await model.generateContent("Provide the subscription audit analysis.");
+              const response = await result.response;
+              return response.text().trim();
+            })(),
+            new Promise<string>((_, reject) => 
+              setTimeout(() => reject(new Error("Gemini API GET call timed out after 8 seconds")), 8000)
+            )
+          ]);
+          console.log("[GET] Gemini response received successfully with fallback.");
+        } catch (fallbackError) {
+          console.error("Gemini Error:", fallbackError);
+          return NextResponse.json(
+            { error: String(fallbackError) },
+            { status: 500 }
+          );
+        }
+      } else {
+        console.error("Gemini Error:", geminiError);
+        return NextResponse.json(
+          { error: String(geminiError) },
+          { status: 500 }
+        );
+      }
     }
 
     console.log("Gemini Raw Response:", text);
@@ -182,10 +244,34 @@ Here is the user's current subscription profile:
 
 Generate a direct response matching the user request. Keep your answers brief (under 3-4 sentences max), punchy, and highly analytical. Avoid using generic emojis.`;
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt
-    });
+    let modelName = "gemini-2.5-flash";
+    let model;
+    console.log("Gemini API Key Present:", !!process.env.GEMINI_API_KEY);
+    console.log("Using Gemini Model:", modelName);
+
+    try {
+      model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: systemPrompt
+      });
+    } catch (err) {
+      console.warn("gemini-2.5-flash not supported by SDK, trying gemini-2.0-flash. Error:", err);
+      modelName = "gemini-2.0-flash";
+      console.log("Gemini API Key Present:", !!process.env.GEMINI_API_KEY);
+      console.log("Using Gemini Model:", modelName);
+      try {
+        model = genAI.getGenerativeModel({ 
+          model: modelName,
+          systemInstruction: systemPrompt
+        });
+      } catch (innerErr) {
+        console.error("Gemini Error:", innerErr);
+        return NextResponse.json(
+          { error: String(innerErr) },
+          { status: 500 }
+        );
+      }
+    }
 
     const userPrompt = prompt || "Analyze my subscriptions and give me a summary of waste.";
 
@@ -213,8 +299,43 @@ Generate a direct response matching the user request. Keep your answers brief (u
       ]);
       console.log("[POST] Gemini response received successfully.");
     } catch (geminiError) {
-      console.error("!!! GEMINI POST API CALL EXCEPTION !!!", geminiError);
-      throw geminiError;
+      // Check if we can fallback to gemini-2.0-flash
+      if (modelName === "gemini-2.5-flash") {
+        console.warn("gemini-2.5-flash call failed, trying fallback to gemini-2.0-flash. Error:", geminiError);
+        modelName = "gemini-2.0-flash";
+        console.log("Gemini API Key Present:", !!process.env.GEMINI_API_KEY);
+        console.log("Using Gemini Model:", modelName);
+        try {
+          model = genAI.getGenerativeModel({ 
+            model: modelName,
+            systemInstruction: systemPrompt
+          });
+          console.log("[POST] Initiating Gemini generateContent request with fallback model...");
+          text = await Promise.race([
+            (async () => {
+              const result = await model.generateContent(userPrompt);
+              const response = await result.response;
+              return response.text().trim();
+            })(),
+            new Promise<string>((_, reject) => 
+              setTimeout(() => reject(new Error("Gemini API POST call timed out after 8 seconds")), 8000)
+            )
+          ]);
+          console.log("[POST] Gemini response received successfully with fallback.");
+        } catch (fallbackError) {
+          console.error("Gemini Error:", fallbackError);
+          return NextResponse.json(
+            { error: String(fallbackError) },
+            { status: 500 }
+          );
+        }
+      } else {
+        console.error("Gemini Error:", geminiError);
+        return NextResponse.json(
+          { error: String(geminiError) },
+          { status: 500 }
+        );
+      }
     }
 
     console.log("Gemini Raw Response:", text);
