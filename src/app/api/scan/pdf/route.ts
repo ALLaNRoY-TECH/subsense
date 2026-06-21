@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { PDFParse } from "pdf-parse";
+// @ts-ignore
+import pdf from "pdf-parse/lib/pdf-parse.js";
 import { getSubscriptionLogo } from "@/lib/subscription-logos";
 import { supabase } from "@/lib/supabase";
 
@@ -39,19 +40,19 @@ function extractAmount(line: string): number {
 }
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("subsense_session")?.value;
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    const cookieStore = await cookies();
+    const userId = cookieStore.get("subsense_session")?.value;
+
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No file uploaded" }, { status: 400 });
     }
 
     // Identify bank from text/filename
@@ -85,10 +86,9 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     
-    // Parse PDF
-    const pdfParser = new PDFParse({ data: buffer });
-    const textResult = await pdfParser.getText();
-    const text = textResult.text;
+    // Parse PDF using the Node-compatible pdf-parse library
+    const data = await pdf(buffer);
+    const text = data.text;
 
     // Detect Bank from text contents if not matched by filename
     const textLower = text.toLowerCase();
@@ -124,8 +124,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Clean up parser
-    await pdfParser.destroy();
+    // No parser destruction required for standard pdf-parse
 
     const detectedSubs = Object.values(detectedGroups);
 
@@ -217,8 +216,15 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error("PDF Parsing error:", error);
-    return NextResponse.json({ error: "Failed to parse statement PDF" }, { status: 500 });
+    console.error("PDF API ERROR:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "PDF processing failed"
+      },
+      { status: 500 }
+    );
   }
 }
 
