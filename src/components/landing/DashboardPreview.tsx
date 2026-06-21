@@ -38,7 +38,7 @@ export default function DashboardPreview() {
               {[
                 { name: "Overview", active: true },
                 { name: "Subscriptions", active: false },
-                { name: "AI Roast Board", active: false },
+                { name: "THE TRUTH Board", active: false },
                 { name: "Smart Alerts", active: false },
                 { name: "Analytics", active: false }
               ].map((item) => (

@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       
       if (action === "roast") {
         if (activeSubs.length === 0) {
-          text = "I can't roast you because your subscription board is empty. Go connect Gmail so I can find something to criticize.";
+          text = "I can't tell you the truth because your subscription board is empty. Go connect Gmail so I can find something to criticize.";
         } else {
           const wasteNames = wasteSubs.map((s: any) => s.name).join(", ");
           text = `Allan, you are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You haven't opened ${wasteSubs[0]?.name || "your unused apps"} in over a month, yet you are still happily auto-billing. Jeff Bezos personally thanks you for your charity.`;
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     let systemPrompt = `You are SubSense, a brilliant, witty, and direct AI financial intelligence assistant.
-Your goal is to help users understand their subscription waste, mock their idle spending habits with humorous/brutal roasts, and provide actionable tips to cancel and optimize.
+Your goal is to help users understand their subscription waste, expose their idle spending habits with the humorous/brutal truth, and provide actionable tips to cancel and optimize.
 Here is the user's current subscription profile:
 - Total Subscriptions: ${activeSubs.length}
 - Total Monthly Outlay: ₹${totalSpend}

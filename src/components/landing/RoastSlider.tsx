@@ -64,7 +64,7 @@ export default function RoastSlider() {
 
   const shareRoast = () => {
     setCopied(true);
-    navigator.clipboard.writeText(`"${ROASTS[index].quote}" - Tracked & Roasted by SubSense.ai`);
+    navigator.clipboard.writeText(`"${ROASTS[index].quote}" - Tracked & Revealed by SubSense.ai`);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -77,7 +77,7 @@ export default function RoastSlider() {
       <div className="glass-panel rounded-2xl p-6 sm:p-8 relative min-h-[280px] flex flex-col justify-between border border-crimson/20 shadow-[0_0_30px_rgba(217,4,41,0.05)]">
         <div className="absolute -top-3.5 left-6 bg-crimson px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-crimson/30">
           <Flame className="w-3.5 h-3.5 fill-white animate-bounce" />
-          AI Reality Roast
+          THE TRUTH
         </div>
 
         <div className="absolute top-4 right-4 text-white/20">
@@ -137,7 +137,7 @@ export default function RoastSlider() {
             className="py-1.5 px-4 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition flex items-center gap-1.5 cursor-pointer"
           >
             <Share2 className="w-3.5 h-3.5" />
-            {copied ? "Copied Link!" : "Share Roast"}
+            {copied ? "Copied Link!" : "Share Truth"}
           </button>
         </div>
       </div>

@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { supabase } from "@/lib/supabase";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/api/auth/callback";
+  const redirectUri =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000/api/auth/callback"
+      : `${process.env.NEXTAUTH_URL}/api/auth/callback`;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-  const cookieStore = await cookies();
 
   if (!code) {
     return NextResponse.redirect(new URL("/?error=missing_code", request.url));
@@ -27,17 +27,26 @@ export async function GET(request: Request) {
     };
 
     // Upsert into Supabase (mock or real)
-    await supabase.from("users").upsert(demoUser);
+    const { error: upsertError } = await supabase.from("users").upsert(demoUser);
+    if (upsertError) {
+      console.error("Supabase demo user upsert failed:", upsertError);
+      return NextResponse.redirect(new URL("/?error=database_error", request.url));
+    }
+    console.log("Supabase user upsert success:", demoUser.id);
 
-    // Set Session Cookie
-    cookieStore.set("subsense_session", "demo-user", {
+    console.log("OAuth success (Demo Sandbox):", demoUser.email);
+    console.log("Session cookie created:", demoUser.id);
+
+    const response = NextResponse.redirect(new URL("/dashboard", request.url));
+    response.cookies.set("subsense_session", demoUser.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/"
     });
 
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return response;
   }
 
   try {
@@ -62,6 +71,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/?error=token_exchange_failed", request.url));
     }
 
+    console.log("OAuth token exchange success");
     const tokens = await tokenResponse.json();
     
     // Fetch User Profile
@@ -77,6 +87,7 @@ export async function GET(request: Request) {
     }
 
     const profile = await profileResponse.json();
+    console.log("Google profile fetch success:", profile.email);
 
     const expiryTime = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
@@ -90,17 +101,26 @@ export async function GET(request: Request) {
     };
 
     // Upsert User Profile into Database
-    await supabase.from("users").upsert(userData);
+    const { error: upsertError } = await supabase.from("users").upsert(userData);
+    if (upsertError) {
+      console.error("Supabase user upsert failed:", upsertError);
+      return NextResponse.redirect(new URL("/?error=database_error", request.url));
+    }
+    console.log("Supabase user upsert success:", userData.id);
 
-    // Set Session Cookie
-    cookieStore.set("subsense_session", profile.id, {
+    console.log("OAuth success:", profile.email);
+    console.log("Session cookie created:", profile.id);
+
+    const response = NextResponse.redirect(new URL("/dashboard", request.url));
+    response.cookies.set("subsense_session", profile.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/"
     });
 
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return response;
   } catch (error) {
     console.error("OAuth Callback error:", error);
     return NextResponse.redirect(new URL("/?error=server_error", request.url));

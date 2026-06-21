@@ -52,7 +52,7 @@ export default function Dashboard() {
 
   // Gemini AI chat assistant state
   const [chatMessages, setChatMessages] = useState<Array<{ sender: "user" | "ai"; text: string }>>([
-    { sender: "ai", text: "Welcome to SubSense Intelligence. Ready to audit your credit leaks? Type 'roast me' or ask about duplicates." }
+    { sender: "ai", text: "Welcome to SubSense Intelligence. Ready to audit your credit leaks? Type 'tell me the truth' or ask about duplicates." }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [loadingChat, setLoadingChat] = useState(false);
@@ -272,7 +272,7 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: messageText,
-          action: actionOverride || (messageText.toLowerCase().includes("roast") ? "roast" : "general"),
+          action: actionOverride || ((messageText.toLowerCase().includes("roast") || messageText.toLowerCase().includes("truth")) ? "roast" : "general"),
           subscriptions
         })
       });
@@ -423,7 +423,7 @@ Allan Carter`);
             {[
               { id: "overview", label: "Dashboard Overview", icon: BarChart3 },
               { id: "subscriptions", label: "Manage Subscriptions", icon: DollarSign },
-              { id: "assistant", label: "AI Roast Assistant", icon: Flame },
+              { id: "assistant", label: "THE TRUTH", icon: Flame },
               { id: "statement", label: "Upload Bank Statement", icon: FileText }
             ].map(item => {
               const Icon = item.icon;
@@ -793,7 +793,7 @@ Allan Carter`);
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-crimson" />
                   <div>
-                    <h4 className="text-sm font-bold text-white">AI Roast Audit Console</h4>
+                    <h4 className="text-sm font-bold text-white">THE TRUTH Audit Console</h4>
                     <p className="text-[10px] text-white/40">Gemini-backed model parsing subscription data.</p>
                   </div>
                 </div>
@@ -824,7 +824,7 @@ Allan Carter`);
               {/* Suggestion Chips */}
               <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar py-1">
                 {[
-                  { label: "🔥 Roast my subscriptions", prompt: "Roast my subscriptions and spending waste" },
+                  { label: "🔥 Tell me the truth", prompt: "Tell me the truth about my subscriptions and spending waste" },
                   { label: "💳 Flag duplicate products", prompt: "Tell me if I have duplicate subscriptions" },
                   { label: "🤖 Summary of leaks", prompt: "Give me a summary of my potential savings options" }
                 ].map((chip, idx) => (

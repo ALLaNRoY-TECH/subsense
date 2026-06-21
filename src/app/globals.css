@@ -243,5 +243,214 @@ body::before {
   white-space: nowrap;
 }
 
+/* Orbit Scene visual styling */
+.scene {
+  position: relative;
+  width: 520px;
+  height: 520px;
+  z-index: 1;
+}
+
+/* GLOW CORE */
+.glow-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 0, 30, 0.35) 0%, transparent 70%);
+  animation: corePulse 2s ease-in-out infinite;
+}
+
+@keyframes corePulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* ORBIT RINGS */
+.ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transform: translate(-50%, -50%);
+}
+
+.ring1 {
+  width: 300px;
+  height: 300px;
+  animation: spinCW 18s linear infinite;
+}
+
+.ring2 {
+  width: 420px;
+  height: 420px;
+  animation: spinCCW 28s linear infinite;
+  border-style: dashed;
+  border-color: rgba(220, 0, 30, 0.12);
+}
+
+@keyframes spinCW {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes spinCCW {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-360deg);
+  }
+}
+
+/* BOTTLE */
+.bottle-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -52%);
+  width: 100px;
+  height: 240px;
+  animation: bob 3.2s ease-in-out infinite;
+  z-index: 20;
+  filter: drop-shadow(0 0 30px rgba(220, 20, 20, 0.7));
+}
+
+@keyframes bob {
+  0%, 100% {
+    transform: translate(-50%, -52%) translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translate(-50%, -52%) translateY(-14px) rotate(1deg);
+  }
+}
+
+/* LOGO NODES – orbit with JS */
+.node {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(8, 0, 8, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  z-index: 30;
+}
+
+.node:hover {
+  transform: translate(-50%, -50%) scale(1.25) !important;
+  border-color: rgba(255, 60, 60, 0.7);
+  box-shadow: 0 0 20px rgba(220, 0, 30, 0.6), 0 0 40px rgba(220, 0, 30, 0.2);
+}
+
+.node svg, .node img {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* MRP popup */
+.mrp {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 0, 10, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #aaa;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  transform: translateX(-50%) translateY(4px);
+  pointer-events: none;
+}
+
+.node:hover .mrp {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.mrp s {
+  color: #ff4444;
+  margin-right: 4px;
+}
+
+.mrp b {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* TITLE */
+.title-wrap {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 30;
+}
+
+.title-wrap h1 {
+  font-size: 13px;
+  letter-spacing: 6px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* SCANLINES overlay */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.04) 2px, rgba(0, 0, 0, 0.04) 4px);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* SPARKS */
+.spark {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 25;
+  animation: sparkFly var(--d, 1.2s) ease-out forwards;
+}
+
+@keyframes sparkFly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx, 0), var(--ty, -60px)) scale(0);
+  }
+}
+
 
 

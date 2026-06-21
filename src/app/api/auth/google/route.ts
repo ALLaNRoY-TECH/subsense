@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/api/auth/callback";
+  const redirectUri =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000/api/auth/callback"
+      : `${process.env.NEXTAUTH_URL}/api/auth/callback`;
 
   // Check if OAuth is configured
   if (!clientId) {

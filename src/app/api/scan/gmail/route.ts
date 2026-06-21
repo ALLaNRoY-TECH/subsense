@@ -112,10 +112,15 @@ export async function POST(request: Request) {
 
   // ---------------- REAL GMAIL SCANNING PIPELINE ----------------
   try {
+    const redirectUri =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000/api/auth/callback"
+        : `${process.env.NEXTAUTH_URL}/api/auth/callback`;
+
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      redirectUri
     );
 
     oauth2Client.setCredentials({

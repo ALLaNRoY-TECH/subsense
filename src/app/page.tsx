@@ -10,6 +10,322 @@ import {
 } from "lucide-react";
 import { getSubscriptionLogo } from "@/lib/subscription-logos";
 
+// Particle Background Component
+const CanvasBackground = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let W = (canvas.width = window.innerWidth);
+    let H = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    const particles: Array<{
+      x: number;
+      y: number;
+      r: number;
+      speed: number;
+      opacity: number;
+      color: string;
+    }> = [];
+
+    for (let i = 0; i < 90; i++) {
+      particles.push({
+        x: Math.random() * 2000,
+        y: Math.random() * 1200,
+        r: Math.random() * 1.5 + 0.3,
+        speed: Math.random() * 0.3 + 0.05,
+        opacity: Math.random() * 0.5 + 0.1,
+        color: Math.random() > 0.7 ? "rgba(220,20,20," : "rgba(255,255,255,",
+      });
+    }
+
+    const drawBG = () => {
+      ctx.clearRect(0, 0, W, H);
+      
+      // Radial glow in center
+      const grd = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 350);
+      grd.addColorStop(0, "rgba(80,0,0,0.18)");
+      grd.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+
+      particles.forEach((p) => {
+        p.y -= p.speed;
+        if (p.y < 0) p.y = H;
+        ctx.beginPath();
+        ctx.arc(p.x % W, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + p.opacity + ")";
+        ctx.fill();
+      });
+      animationFrameId = requestAnimationFrame(drawBG);
+    };
+
+    drawBG();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} id="bg" className="fixed inset-0 w-full h-full z-0 pointer-events-none" />;
+};
+
+// Orbital Visualization Component (Diet Coke styled Can + Subscription Orbits)
+const OrbitVisual = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const bottleRef = useRef<HTMLDivElement>(null);
+  const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    let t = 0;
+    let animationFrameId: number;
+
+    const cx = 260, cy = 260; // center of 520x520 scene
+    const INNER_R = 150, OUTER_R = 210;
+    const config = [
+      { orbit: OUTER_R, speed: 0.28, phase: 0 },
+      { orbit: INNER_R, speed: -0.38, phase: 1.05 },
+      { orbit: OUTER_R, speed: 0.28, phase: 2.1 },
+      { orbit: INNER_R, speed: -0.38, phase: 3.14 },
+      { orbit: OUTER_R, speed: 0.28, phase: 4.2 },
+      { orbit: INNER_R, speed: -0.38, phase: 5.24 },
+    ];
+
+    const animateNodes = () => {
+      t += 0.008;
+      config.forEach((n, idx) => {
+        const el = nodeRefs.current[idx];
+        if (el) {
+          const angle = t * n.speed + n.phase;
+          const x = cx + Math.cos(angle) * n.orbit;
+          const y = cy + Math.sin(angle) * n.orbit * 0.35; // flatten orbit to ellipse
+          
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+          
+          // depth: nodes at back are smaller + dimmer
+          const depth = (Math.sin(angle) + 1) / 2;
+          const s = 0.7 + depth * 0.45;
+          const op = 0.5 + depth * 0.5;
+          
+          el.style.transform = `translate(-50%, -50%) scale(${s.toFixed(3)})`;
+          el.style.opacity = op.toFixed(2);
+          el.style.zIndex = `${Math.round(depth * 20) + 10}`;
+        }
+      });
+      animationFrameId = requestAnimationFrame(animateNodes);
+    };
+
+    animationFrameId = requestAnimationFrame(animateNodes);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  // Sparks click logic
+  const handleBottleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const clickX = e.clientX - containerRect.left;
+    const clickY = e.clientY - containerRect.top;
+
+    for (let i = 0; i < 18; i++) {
+      const sp = document.createElement("div");
+      sp.className = "spark";
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 50 + Math.random() * 80;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - 30;
+      const size = 3 + Math.random() * 4;
+      const dur = 0.6 + Math.random() * 0.7;
+      const hue = Math.random() > 0.5 ? "220,20,20" : "255,200,0";
+      
+      sp.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 25;
+        width: ${size}px;
+        height: ${size}px;
+        background: rgb(${hue});
+        left: ${clickX}px;
+        top: ${clickY}px;
+        --tx: ${tx}px;
+        --ty: ${ty}px;
+        --d: ${dur}s;
+      `;
+      container.appendChild(sp);
+      setTimeout(() => sp.remove(), dur * 1000 + 100);
+    }
+  };
+
+  // Drift bottle on mouse move inside landing header
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const bottle = bottleRef.current;
+      if (!bottle) return;
+      const dx = (e.clientX / window.innerWidth - 0.5) * 12;
+      const dy = (e.clientY / window.innerHeight - 0.5) * 8;
+      bottle.style.filter = `drop-shadow(${-dx * 0.5}px ${-dy * 0.5}px 30px rgba(220,20,20,0.7))`;
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    return () => document.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="scene relative w-[520px] h-[520px] z-10 select-none">
+      <div className="glow-core" />
+      <div className="ring ring1" />
+      <div className="ring ring2" />
+
+      {/* SODA CAN SVG (representing 4th image) */}
+      <div 
+        ref={bottleRef} 
+        id="bottle" 
+        className="bottle-wrap cursor-pointer"
+        onClick={handleBottleClick}
+      >
+        <svg viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg" width="120" height="220" className="w-full h-full select-none pointer-events-none">
+          <defs>
+            <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4d4d50" />
+              <stop offset="15%" stopColor="#a3a3a6" />
+              <stop offset="30%" stopColor="#e1e1e4" />
+              <stop offset="45%" stopColor="#f5f5f7" />
+              <stop offset="55%" stopColor="#e1e1e4" />
+              <stop offset="75%" stopColor="#8e8e91" />
+              <stop offset="90%" stopColor="#5a5a5d" />
+              <stop offset="100%" stopColor="#3a3a3c" />
+            </linearGradient>
+            <linearGradient id="metalRim" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7a7a7d" />
+              <stop offset="25%" stopColor="#d1d1d4" />
+              <stop offset="50%" stopColor="#f5f5f7" />
+              <stop offset="75%" stopColor="#b0b0b3" />
+              <stop offset="100%" stopColor="#606063" />
+            </linearGradient>
+            <linearGradient id="labelShade" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.8" />
+              <stop offset="20%" stopColor="#000000" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="80%" stopColor="#000000" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.8" />
+            </linearGradient>
+          </defs>
+
+          {/* Can Silhouette / Body */}
+          <path d="M12,20 Q60,14 108,20 L108,200 Q60,206 12,200 Z" fill="url(#metalBody)" />
+
+          {/* Top Rim Lip */}
+          <ellipse cx="60" cy="20" rx="48" ry="8" fill="url(#metalRim)" stroke="#3a3a3c" strokeWidth="0.7" />
+          <ellipse cx="60" cy="20" rx="44" ry="6" fill="#1e1e20" />
+          <ellipse cx="60" cy="22" rx="42" ry="5" fill="url(#metalRim)" />
+
+          {/* Bottom Rim Lip */}
+          <path d="M12,200 Q60,208 108,200 L108,203 Q60,211 12,203 Z" fill="url(#metalRim)" stroke="#3a3a3c" strokeWidth="0.5" />
+          <ellipse cx="60" cy="203" rx="48" ry="8" fill="url(#metalRim)" opacity="0.8" />
+
+          {/* WHITE LABEL */}
+          <path d="M12,50 Q60,54 108,50 L108,170 Q60,174 12,170 Z" fill="#ffffff" />
+          <path d="M12,48 Q60,52 108,48 L108,51 Q60,55 12,51 Z" fill="#d90429" />
+          <path d="M12,169 Q60,173 108,169 L108,172 Q60,176 12,172 Z" fill="#d90429" />
+
+          {/* Shading overlay */}
+          <path d="M12,50 Q60,54 108,50 L108,170 Q60,174 12,170 Z" fill="url(#labelShade)" opacity="0.18" />
+
+          {/* SubSense Text */}
+          <text x="60" y="118" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="bold" fontSize="19" fill="#d90429" letterSpacing="0.2">SubSense</text>
+
+          {/* Left: 1 KCAL */}
+          <rect x="20" y="146" width="12" height="16" rx="2" fill="none" stroke="#666" strokeWidth="0.5" />
+          <text x="26" y="153" textAnchor="middle" fontFamily="sans-serif" fontSize="5" fontWeight="bold" fill="#333">1</text>
+          <text x="26" y="159" textAnchor="middle" fontFamily="sans-serif" fontSize="4" fill="#666">KCAL</text>
+
+          {/* Right: Barcode */}
+          <line x1="90" y1="146" x2="90" y2="162" stroke="#444" strokeWidth="0.8" />
+          <line x1="92" y1="146" x2="92" y2="162" stroke="#444" strokeWidth="0.5" />
+          <line x1="94" y1="146" x2="94" y2="162" stroke="#444" strokeWidth="0.8" />
+          <line x1="96" y1="146" x2="96" y2="162" stroke="#444" strokeWidth="0.5" />
+          <line x1="98" y1="146" x2="98" y2="162" stroke="#444" strokeWidth="1.2" />
+        </svg>
+      </div>
+
+      {/* Orbiting nodes (subscription widgets with MRP popup tooltips) */}
+      {[
+        {
+          id: "n0",
+          mrpOld: "₹649",
+          mrpNew: "₹199",
+          svg: `<svg viewBox="0 0 30 30"><rect width="30" height="30" fill="#000"/><text x="4" y="24" font-family="Arial Black" font-size="22" font-weight="900" fill="#E50914">N</text></svg>`,
+        },
+        {
+          id: "n1",
+          mrpOld: "₹119",
+          mrpNew: "₹49",
+          svg: `<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="15" fill="#1DB954"/><path d="M8 11c4-1.2 8.5-.9 11.5 1.1" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M8.5 15c3.2-1 6.8-.7 9.5 1" stroke="#fff" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M9 19c2.4-.8 5.4-.5 7.5.9" stroke="#fff" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>`,
+        },
+        {
+          id: "n2",
+          mrpOld: "₹299",
+          mrpNew: "₹149",
+          svg: `<svg viewBox="0 0 30 30"><rect width="30" height="30" fill="#00A8E0"/><text x="3" y="14" font-family="Arial Black" font-size="7.5" font-weight="900" fill="#fff">prime</text><text x="3" y="24" font-family="Arial Black" font-size="7" font-weight="900" fill="#fff">video</text></svg>`,
+        },
+        {
+          id: "n3",
+          mrpOld: "₹499",
+          mrpNew: "₹199",
+          svg: `<svg viewBox="0 0 30 30"><rect width="30" height="30" rx="6" fill="#0e0e5e"/><text x="15" y="11" text-anchor="middle" font-family="Arial Black" font-size="7" fill="#fff" font-weight="900">Disney+</text><text x="15" y="22" text-anchor="middle" font-family="Arial Black" font-size="6.5" fill="#00c8ff">Hotstar</text></svg>`,
+        },
+        {
+          id: "n4",
+          mrpOld: "₹149",
+          mrpNew: "₹69",
+          svg: `<svg viewBox="0 0 30 30"><rect width="30" height="30" rx="15" fill="#E23744"/><text x="15" y="21" text-anchor="middle" font-family="Arial Black" font-size="16" font-weight="900" fill="#fff">Z</text></svg>`,
+        },
+        {
+          id: "n5",
+          mrpOld: "₹299",
+          mrpNew: "₹99",
+          svg: `<svg viewBox="0 0 30 30"><rect width="30" height="30" rx="15" fill="#FC8019"/><text x="15" y="22" text-anchor="middle" font-family="Arial Black" font-size="14" font-weight="900" fill="#fff">S</text></svg>`,
+        },
+      ].map((node, idx) => (
+        <div
+          key={node.id}
+          ref={(el) => {
+            nodeRefs.current[idx] = el;
+          }}
+          className="node"
+          id={node.id}
+        >
+          <div dangerouslySetInnerHTML={{ __html: node.svg }} className="flex items-center justify-center w-[30px] h-[30px]" />
+          <div className="mrp">
+            <s>{node.mrpOld}</s>
+            <b>{node.mrpNew}</b>
+          </div>
+        </div>
+      ))}
+
+      <div className="title-wrap">
+        <h1>your subscriptions. one sip.</h1>
+      </div>
+    </div>
+  );
+};
+
 // List of features
 const FEATURES = [
   { title: "Gmail Detection", desc: "Instantly scan inbox receipts & invoices using secure Google OAuth read-only scopes.", icon: Mail },
@@ -110,6 +426,8 @@ export default function Home() {
 
   return (
     <div className="bg-[#0a0a0a] text-white min-h-screen relative font-sans antialiased overflow-x-hidden selection:bg-[#EF233C] selection:text-white">
+      <CanvasBackground />
+      <div className="scanlines" />
       
       {/* 520px Mouse Follow Radial Glow */}
       <div 
@@ -246,32 +564,7 @@ export default function Home() {
 
           {/* Visual (5 cols) */}
           <div className="lg:col-span-5 h-[560px] flex items-center justify-center relative">
-            
-            {/* Spinning decorative rings */}
-            <div className="absolute w-[340px] h-[340px] rounded-full border border-white/5 animate-spin-slow" />
-            <div className="absolute w-[430px] h-[430px] rounded-full border border-dashed border-white/[0.04] animate-spin-reverse-slow" />
-
-            {/* Diet Coke Inspired Can Capsule Container */}
-            <div className="relative">
-              <div className="capsule-cap" />
-              <div className="capsule">
-                <div className="capsule-label font-display text-white">SubSense</div>
-              </div>
-            </div>
-
-            {/* Floating Brand Badges (using actual brand SVG mappings!) */}
-            <div className="badge b1 animate-float" dangerouslySetInnerHTML={{ __html: getSubscriptionLogo("Netflix").svg }} />
-            <div className="badge b2 animate-float [animation-delay:1.1s]" dangerouslySetInnerHTML={{ __html: getSubscriptionLogo("Spotify").svg }} />
-            <div className="badge b3 animate-float [animation-delay:0.6s]" dangerouslySetInnerHTML={{ __html: getSubscriptionLogo("Prime Video").svg }} />
-            <div className="badge b4 animate-float [animation-delay:1.6s]" dangerouslySetInnerHTML={{ __html: getSubscriptionLogo("ChatGPT Plus").svg }} />
-            <div className="badge b5 animate-float [animation-delay:0.9s]" dangerouslySetInnerHTML={{ __html: getSubscriptionLogo("Canva Pro").svg }} />
-
-            {/* Rising Bubbles with Prices */}
-            <div className="bubble animate-rise-bubble left-[18%] [animation-delay:0s]">₹649</div>
-            <div className="bubble animate-rise-bubble left-[62%] [animation-delay:1.6s]">₹119</div>
-            <div className="bubble animate-rise-bubble left-[40%] [animation-delay:3.1s]">₹1,999</div>
-            <div className="bubble animate-rise-bubble left-[75%] [animation-delay:4.4s]">₹499</div>
-            <div className="bubble animate-rise-bubble left-[8%] [animation-delay:5.6s]">₹2,230</div>
+            <OrbitVisual />
           </div>
 
         </div>
@@ -512,12 +805,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* AI REALITY ROAST CAROUSEL SECTION */}
+      {/* AI REALITY TRUTH CAROUSEL SECTION */}
       <section className="py-20 px-8 max-w-[1240px] mx-auto text-left">
         <div className="roast-head flex items-end justify-between gap-5 flex-wrap">
           <div>
             <span className="eyebrow">Reality Audit</span>
-            <h2 className="font-display text-4xl sm:text-5xl uppercase mt-2">No Holds Barred Roasts</h2>
+            <h2 className="font-display text-4xl sm:text-5xl uppercase mt-2">THE TRUTH</h2>
           </div>
         </div>
 
@@ -539,7 +832,7 @@ export default function Home() {
                   &ldquo;{card.quote}&rdquo;
                 </p>
               </div>
-              <span className="text-[10px] text-neutral-500 font-semibold block mt-4.5">AI ROAST ALERT</span>
+              <span className="text-[10px] text-neutral-500 font-semibold block mt-4.5">THE TRUTH</span>
             </div>
           ))}
 
@@ -569,7 +862,7 @@ export default function Home() {
             <ul className="dash-feature-list space-y-4 pt-4 border-t border-white/5">
               {[
                 { title: "Real-time updates", desc: "Removing or pauses automatically rebuilds monthly outlines." },
-                { title: "AI chat console integrations", desc: "Direct communications for cancellations and custom roasts." },
+                { title: "AI chat console integrations", desc: "Direct communications for cancellations and custom insights." },
                 { title: "Branded Vector Assets", desc: "Crisp matching vector brand visuals representing every item." }
               ].map((item, idx) => (
                 <li key={idx} className="flex gap-3.5 items-start">
@@ -815,7 +1108,7 @@ export default function Home() {
                 <span className="text-neutral-500 text-xs">/ month</span>
               </div>
               <ul className="space-y-3 mt-6 text-xs text-neutral-300">
-                {["Unlimited subscription tracking", "Automated Gmail API Scanning", "PDF Bank Statement uploader scans", "Gemini AI Roast & insights console"].map((f, i) => (
+                {["Unlimited subscription tracking", "Automated Gmail API Scanning", "PDF Bank Statement uploader scans", "Gemini AI Truth & insights console"].map((f, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#EF233C]" strokeWidth={3} />
                     <span>{f}</span>
@@ -842,7 +1135,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               { name: "Varun Sharma", role: "SaaS Founder", quote: "SubSense found 4 duplicate Canva accounts inside our marketing team folders within 2 mins of setup. Saved us over ₹22,000/yr immediately.", avatar: "VS" },
-              { name: "Riya Sen", role: "UX Designer", quote: "The AI roast was the wake-up call I needed. I was paying for Adobe Suite apps I hadn't opened since 2025. The circular dashboard score is addictive.", avatar: "RS" },
+              { name: "Riya Sen", role: "UX Designer", quote: "The AI truth was the wake-up call I needed. I was paying for Adobe Suite apps I hadn't opened since 2025. The circular dashboard score is addictive.", avatar: "RS" },
               { name: "Amit Patel", role: "Creative Lead", quote: "PDF Bank Statement scan works flawlessly. Dragged my quarterly statement in, and it mapped out two separate server hostings I forgot to deactivate.", avatar: "AP" }
             ].map((test, idx) => (
               <div key={idx} className="p-6.5 glass text-left flex flex-col justify-between min-h-[200px]">
