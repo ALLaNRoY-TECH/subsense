@@ -80,9 +80,24 @@ Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`
     console.log("Subscriptions Count:", subs.length);
     console.log("System Prompt / Instructions:", systemPrompt);
 
-    const result = await model.generateContent("Provide the subscription audit analysis.");
-    const response = await result.response;
-    const text = response.text().trim();
+    let text = "";
+    try {
+      console.log("[GET] Initiating Gemini generateContent request...");
+      text = await Promise.race([
+        (async () => {
+          const result = await model.generateContent("Provide the subscription audit analysis.");
+          const response = await result.response;
+          return response.text().trim();
+        })(),
+        new Promise<string>((_, reject) => 
+          setTimeout(() => reject(new Error("Gemini API GET call timed out after 8 seconds")), 8000)
+        )
+      ]);
+      console.log("[GET] Gemini response received successfully.");
+    } catch (geminiError) {
+      console.error("!!! GEMINI GET API CALL EXCEPTION !!!", geminiError);
+      throw geminiError;
+    }
 
     console.log("Gemini Raw Response:", text);
     console.log("=====================================");
@@ -95,7 +110,7 @@ Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`
 
   } catch (error) {
     console.error("Gemini AI API GET Error:", error);
-    return NextResponse.json({ error: "AI completions failed" }, { status: 500 });
+    return NextResponse.json({ error: "AI completions failed: " + (error instanceof Error ? error.message : String(error)) }, { status: 500 });
   }
 }
 
@@ -183,9 +198,24 @@ Generate a direct response matching the user request. Keep your answers brief (u
     console.log("System Prompt / Instructions:", systemPrompt);
     console.log("User Prompt:", userPrompt);
 
-    const result = await model.generateContent(userPrompt);
-    const response = await result.response;
-    const text = response.text().trim();
+    let text = "";
+    try {
+      console.log("[POST] Initiating Gemini generateContent request for prompt:", userPrompt);
+      text = await Promise.race([
+        (async () => {
+          const result = await model.generateContent(userPrompt);
+          const response = await result.response;
+          return response.text().trim();
+        })(),
+        new Promise<string>((_, reject) => 
+          setTimeout(() => reject(new Error("Gemini API POST call timed out after 8 seconds")), 8000)
+        )
+      ]);
+      console.log("[POST] Gemini response received successfully.");
+    } catch (geminiError) {
+      console.error("!!! GEMINI POST API CALL EXCEPTION !!!", geminiError);
+      throw geminiError;
+    }
 
     console.log("Gemini Raw Response:", text);
     console.log("==============================");
@@ -194,6 +224,6 @@ Generate a direct response matching the user request. Keep your answers brief (u
 
   } catch (error) {
     console.error("Gemini AI API POST Error:", error);
-    return NextResponse.json({ error: "AI completions failed" }, { status: 500 });
+    return NextResponse.json({ error: "AI completions failed: " + (error instanceof Error ? error.message : String(error)) }, { status: 500 });
   }
 }
