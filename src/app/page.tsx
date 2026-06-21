@@ -193,76 +193,15 @@ const OrbitVisual = () => {
       <div className="ring ring1" />
       <div className="ring ring2" />
 
-      {/* SODA CAN SVG (representing 4th image) */}
+      {/* CENTRAL INTERACTIVE HOLO-CORE */}
       <div 
         ref={bottleRef} 
         id="bottle" 
-        className="bottle-wrap cursor-pointer"
+        className="bottle-wrap cursor-pointer flex flex-col items-center justify-center rounded-full border border-red-500/45 bg-[#0c0c0e]/92 hover:bg-[#101013] hover:scale-105 hover:border-red-500/80 hover:shadow-[0_0_35px_rgba(239,35,60,0.5)] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(239,35,60,0.2)]"
         onClick={handleBottleClick}
       >
-        <svg viewBox="0 0 120 220" xmlns="http://www.w3.org/2000/svg" width="120" height="220" className="w-full h-full select-none pointer-events-none">
-          <defs>
-            <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#4d4d50" />
-              <stop offset="15%" stopColor="#a3a3a6" />
-              <stop offset="30%" stopColor="#e1e1e4" />
-              <stop offset="45%" stopColor="#f5f5f7" />
-              <stop offset="55%" stopColor="#e1e1e4" />
-              <stop offset="75%" stopColor="#8e8e91" />
-              <stop offset="90%" stopColor="#5a5a5d" />
-              <stop offset="100%" stopColor="#3a3a3c" />
-            </linearGradient>
-            <linearGradient id="metalRim" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#7a7a7d" />
-              <stop offset="25%" stopColor="#d1d1d4" />
-              <stop offset="50%" stopColor="#f5f5f7" />
-              <stop offset="75%" stopColor="#b0b0b3" />
-              <stop offset="100%" stopColor="#606063" />
-            </linearGradient>
-            <linearGradient id="labelShade" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#000000" stopOpacity="0.8" />
-              <stop offset="20%" stopColor="#000000" stopOpacity="0.1" />
-              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.3" />
-              <stop offset="80%" stopColor="#000000" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#000000" stopOpacity="0.8" />
-            </linearGradient>
-          </defs>
-
-          {/* Can Silhouette / Body */}
-          <path d="M12,20 Q60,14 108,20 L108,200 Q60,206 12,200 Z" fill="url(#metalBody)" />
-
-          {/* Top Rim Lip */}
-          <ellipse cx="60" cy="20" rx="48" ry="8" fill="url(#metalRim)" stroke="#3a3a3c" strokeWidth="0.7" />
-          <ellipse cx="60" cy="20" rx="44" ry="6" fill="#1e1e20" />
-          <ellipse cx="60" cy="22" rx="42" ry="5" fill="url(#metalRim)" />
-
-          {/* Bottom Rim Lip */}
-          <path d="M12,200 Q60,208 108,200 L108,203 Q60,211 12,203 Z" fill="url(#metalRim)" stroke="#3a3a3c" strokeWidth="0.5" />
-          <ellipse cx="60" cy="203" rx="48" ry="8" fill="url(#metalRim)" opacity="0.8" />
-
-          {/* WHITE LABEL */}
-          <path d="M12,50 Q60,54 108,50 L108,170 Q60,174 12,170 Z" fill="#ffffff" />
-          <path d="M12,48 Q60,52 108,48 L108,51 Q60,55 12,51 Z" fill="#d90429" />
-          <path d="M12,169 Q60,173 108,169 L108,172 Q60,176 12,172 Z" fill="#d90429" />
-
-          {/* Shading overlay */}
-          <path d="M12,50 Q60,54 108,50 L108,170 Q60,174 12,170 Z" fill="url(#labelShade)" opacity="0.18" />
-
-          {/* SubSense Text */}
-          <text x="60" y="118" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="bold" fontSize="19" fill="#d90429" letterSpacing="0.2">SubSense</text>
-
-          {/* Left: 1 KCAL */}
-          <rect x="20" y="146" width="12" height="16" rx="2" fill="none" stroke="#666" strokeWidth="0.5" />
-          <text x="26" y="153" textAnchor="middle" fontFamily="sans-serif" fontSize="5" fontWeight="bold" fill="#333">1</text>
-          <text x="26" y="159" textAnchor="middle" fontFamily="sans-serif" fontSize="4" fill="#666">KCAL</text>
-
-          {/* Right: Barcode */}
-          <line x1="90" y1="146" x2="90" y2="162" stroke="#444" strokeWidth="0.8" />
-          <line x1="92" y1="146" x2="92" y2="162" stroke="#444" strokeWidth="0.5" />
-          <line x1="94" y1="146" x2="94" y2="162" stroke="#444" strokeWidth="0.8" />
-          <line x1="96" y1="146" x2="96" y2="162" stroke="#444" strokeWidth="0.5" />
-          <line x1="98" y1="146" x2="98" y2="162" stroke="#444" strokeWidth="1.2" />
-        </svg>
+        <span className="font-display text-xl uppercase tracking-wider text-white">Sub<span className="text-[#EF233C]">Sense</span></span>
+        <span className="text-[9px] uppercase tracking-widest text-neutral-400 mt-1.5 font-mono">Tap to Scan</span>
       </div>
 
       {/* Orbiting nodes (subscription widgets with MRP popup tooltips) */}

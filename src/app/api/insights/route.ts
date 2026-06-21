@@ -6,6 +6,51 @@ import { supabase } from "@/lib/supabase";
 const MODEL_NAME = "gemini-2.5-flash";
 console.log("Using Gemini model:", MODEL_NAME);
 
+// Helper function to clean markdown formatting from text
+function cleanMarkdown(text: string): string {
+  if (!text) return "";
+  
+  let cleaned = text;
+
+  // 1. Strip code fences (e.g. ```json ... ``` or just ```)
+  cleaned = cleaned.replace(/```[a-zA-Z]*\n?/g, "");
+  cleaned = cleaned.replace(/```/g, "");
+
+  // 2. Strip markdown headers starting with # at the beginning of a line
+  cleaned = cleaned.replace(/^#+\s+/gm, "");
+
+  // 3. Strip bold/italic symbols (**bold**, *italic*, _italic_, __bold__)
+  cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, "$1");
+  cleaned = cleaned.replace(/\*([^*]+)\*/g, "$1");
+  cleaned = cleaned.replace(/__([^_]+)__/g, "$1");
+  cleaned = cleaned.replace(/_([^_]+)_/g, "$1");
+
+  // 4. Strip inline code backticks (`code`)
+  cleaned = cleaned.replace(/`([^`]+)`/g, "$1");
+
+  // 5. Strip markdown bullet points at the beginning of a line (- item, * item, + item)
+  cleaned = cleaned.replace(/^[-*+]\s+/gm, "");
+
+  // 6. Strip numbered lists at the start of a line (e.g. "1. ")
+  cleaned = cleaned.replace(/^\d+\.\s+/gm, "");
+
+  // 7. Strip blockquote characters (e.g. "> text") at the start of a line
+  cleaned = cleaned.replace(/^>\s+/gm, "");
+
+  // 8. Remove horizontal rules (e.g., --- or ***)
+  cleaned = cleaned.replace(/^[-*_]{3,}\s*$/gm, "");
+
+  // 9. Replace remaining stray asterisks, hashes or underscores
+  cleaned = cleaned.replace(/\*/g, "");
+  cleaned = cleaned.replace(/_/g, "");
+  cleaned = cleaned.replace(/#/g, "");
+
+  // 10. Trim whitespace
+  cleaned = cleaned.trim();
+
+  return cleaned;
+}
+
 // GET: Fetch structured AI insights dashboard
 export async function GET() {
   const cookieStore = await cookies();
@@ -37,9 +82,20 @@ export async function GET() {
       return acc;
     }, {});
 
+    // If no subscriptions exist:
+    if (subs.length === 0) {
+      return NextResponse.json({
+        summary: "No active subscriptions were detected in your account.",
+        savings: "No immediate monthly and annual savings options are available because your subscription list is empty.",
+        healthScore: 100,
+        roast: "No subscriptions found. Your wallet is clean, or you haven't uploaded a bank statement or Gmail audit yet.",
+        recommendations: ["No active subscriptions were detected in your account."]
+      });
+    }
+
     // Fallback if API key is missing
     if (!apiKey) {
-      const fallbackScore = totalSpend === 0 ? 100 : Math.max(30, Math.min(100, Math.round(100 - (wasteSpend / totalSpend) * 80)));
+      const fallbackScore = Math.max(30, Math.min(100, Math.round(100 - (wasteSpend / totalSpend) * 80)));
       return NextResponse.json({
         summary: `You are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You have ${subs.length} active platforms.`,
         savings: `You can save up to ₹${wasteSpend.toLocaleString("en-IN")} monthly by optimizing ${wasteSubs.length} idle subscriptions.`,
@@ -54,7 +110,7 @@ export async function GET() {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const systemPrompt = `You are SubSense AI, a witty financial optimizer.
+    const systemPrompt = `You are SubSense AI, a direct, intelligent, data-driven financial auditor.
 Analyze this JSON subscription data:
 - Monthly Outlay: ₹${totalSpend}
 - Annual Outlay: ₹${annualSpend}
@@ -70,7 +126,9 @@ Generate a structured JSON output with the exact keys:
   "roast": "Brutal, funny, witty roast of the user's spending habits",
   "recommendations": ["Array of 2-3 specific, actionable recommendations"]
 }
-Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`\`json).`;
+Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`\`json).
+
+CRITICAL: Do not use any markdown formatting (no bold **, no italic *, no headings #, no list bullets - or *, no backticks) in any of the string fields.`;
 
     let modelName = "gemini-2.5-flash";
     let model;
@@ -168,6 +226,14 @@ Return ONLY valid JSON. Do not write any markdown code block wrappers (like \`\`
     const jsonStr = text.replace(/```json/gi, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(jsonStr);
 
+    // Add validation before sending to frontend: strip markdown symbols
+    if (parsed.summary) parsed.summary = cleanMarkdown(parsed.summary);
+    if (parsed.savings) parsed.savings = cleanMarkdown(parsed.savings);
+    if (parsed.roast) parsed.roast = cleanMarkdown(parsed.roast);
+    if (parsed.recommendations && Array.isArray(parsed.recommendations)) {
+      parsed.recommendations = parsed.recommendations.map((rec: string) => cleanMarkdown(rec));
+    }
+
     return NextResponse.json(parsed);
 
   } catch (error) {
@@ -205,6 +271,11 @@ export async function POST(request: Request) {
     const wasteSubs = activeSubs.filter((s: any) => s.status !== "active");
     const wasteSpend = wasteSubs.reduce((sum: number, s: any) => sum + s.price, 0);
 
+    // If no subscriptions exist:
+    if (activeSubs.length === 0) {
+      return NextResponse.json({ text: "No active subscriptions were detected in your account." });
+    }
+
     // Fallback if API key is missing
     if (!apiKey) {
       console.warn("GEMINI_API_KEY is missing. Generating rules-based local AI response.");
@@ -212,12 +283,8 @@ export async function POST(request: Request) {
       let text = "";
       
       if (action === "roast") {
-        if (activeSubs.length === 0) {
-          text = "Your subscription board is empty. Connect Gmail or upload a statement so I can analyze your spending.";
-        } else {
-          const firstWaste = wasteSubs[0]?.name || (activeSubs.length > 0 ? activeSubs[0].name : "your apps");
-          text = `You are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You haven't opened ${firstWaste} in a while, yet you are still happily auto-billing.`;
-        }
+        const firstWaste = wasteSubs[0]?.name || (activeSubs.length > 0 ? activeSubs[0].name : "your apps");
+        text = `You are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You haven't opened ${firstWaste} in a while, yet you are still happily auto-billing.`;
       } else if (action === "cancel") {
         const subName = prompt || "the service";
         const matchingSub = activeSubs.find((s: any) => s.name.toLowerCase().includes(subName.toLowerCase()));
@@ -228,21 +295,50 @@ export async function POST(request: Request) {
         text = `Auditing completed. Discovered ${activeSubs.length} active platforms (${platformNames || "none"}). You are wasting ₹${wasteSpend} monthly on ${wasteSubs.length} unused or duplicate memberships. Recommended action: Cancel unused subscriptions immediately.`;
       }
 
-      return NextResponse.json({ text, localFallback: true });
+      return NextResponse.json({ text: cleanMarkdown(text), localFallback: true });
     }
 
     // Real Gemini Chat
     const genAI = new GoogleGenerativeAI(apiKey);
-    let systemPrompt = `You are SubSense, a brilliant, witty, and direct AI financial intelligence assistant.
+    let systemPrompt = `You are SubSense, a direct, intelligent, data-driven financial auditor.
 Your goal is to help users understand their subscription waste, expose their idle spending habits with the humorous/brutal truth, and provide actionable tips to cancel and optimize.
+Use ONLY the subscription data provided in this prompt. Never hallucinate or invent subscription names, prices, dates, or categories.
+
+CRITICAL FORMATTING INSTRUCTIONS (VIOLATING THESE IS UNACCEPTABLE):
+1. Do not use ANY markdown formatting (no bold **, no italic *, no headings #, no markdown bullet points like - or *, no code blocks, no backticks, no markdown tables, no markdown syntax of any kind).
+2. Responses must be written as natural conversational text suitable for a chat application.
+3. When listing subscriptions, format each subscription exactly like this (use plain text newlines, no bullet points, no bold, no markdown):
+[Subscription Name]
+Price: [Currency][Price]/month
+Category: [Category]
+Billing Date: [Billing Date]
+Yearly Cost: [Currency][Yearly Price]
+
+Leave a blank line between different subscriptions.
+
+4. When calculations are requested:
+- Show the math clearly.
+- Example:
+Monthly Spend: ₹248
+Yearly Spend: ₹248 × 12 = ₹2976
+
+5. When recommending cancellations:
+- Explain why.
+- Reference actual usage data when available.
+- Never invent subscriptions that do not exist.
+
+6. When generating cancellation emails:
+- Return a complete ready-to-send email.
+- Include subject line and email body.
+- Do not use markdown syntax or markdown code blocks for the email.
+
 Here is the user's current subscription profile:
 - Total Subscriptions: ${activeSubs.length}
 - Total Monthly Outlay: ₹${totalSpend}
 - Flagged Waste Outlay: ₹${wasteSpend}
 - Flagged Waste Items: ${JSON.stringify(wasteSubs)}
 - Full Listing: ${JSON.stringify(activeSubs)}
-
-Generate a direct response matching the user request. Keep your answers brief (under 3-4 sentences max), punchy, and highly analytical. Avoid using generic emojis.`;
+`;
 
     let modelName = "gemini-2.5-flash";
     let model;
@@ -340,6 +436,9 @@ Generate a direct response matching the user request. Keep your answers brief (u
 
     console.log("Gemini Raw Response:", text);
     console.log("==============================");
+
+    // Strip markdown symbols and formatting
+    text = cleanMarkdown(text);
 
     return NextResponse.json({ text });
 
