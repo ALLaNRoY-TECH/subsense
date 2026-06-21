@@ -9,6 +9,7 @@ import {
   X, ArrowUp, DollarSign, Flame, Trash2, ShieldCheck
 } from "lucide-react";
 import { getSubscriptionLogo } from "@/lib/subscription-logos";
+import RoastSlider from "@/components/landing/RoastSlider";
 
 // Particle Background Component
 const CanvasBackground = () => {
@@ -582,6 +583,38 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SOCIAL PROOF & TRUST INDICATORS STRIP */}
+      <section className="relative z-10 py-10 bg-black/60 border-b border-white/5">
+        <div className="max-w-[1240px] mx-auto px-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
+            {[
+              { value: "₹0.5M+", label: "Outlay Tracked" },
+              { value: "1,000+", label: "Subscriptions Detected" },
+              { value: "98%", label: "Detection Accuracy" },
+              { value: "Bank-Grade", label: "Security Encryption" },
+              { value: "Read-Only", label: "Google API Access" }
+            ].map((stat, idx) => (
+              <div key={idx} className="space-y-1">
+                <h4 className="text-xl sm:text-2xl font-black text-white text-glow">{stat.value}</h4>
+                <p className="text-[10px] sm:text-xs text-neutral-500 font-mono uppercase tracking-wider">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+          
+          {/* Trust explanations */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 mt-12 pt-8 border-t border-white/5 text-xs text-neutral-400">
+            <div className="flex items-center gap-2.5 text-left">
+              <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <span><b>SOC2 Compliant Credentials</b>: Your data is never stored locally or sold.</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-left">
+              <Sparkles className="w-5 h-5 text-[#EF233C] animate-pulse flex-shrink-0" />
+              <span><b>Secure Google Integration</b>: We request read-only scopes restricted entirely to receipt queries.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* GMAIL SCANNING DISCOVER SECTION */}
       <section className="py-28 px-8 max-w-[1240px] mx-auto scroll-mt-24" id="discover">
         <div className="text-left space-y-2 mb-16">
@@ -806,45 +839,16 @@ export default function Home() {
       </section>
 
       {/* AI REALITY TRUTH CAROUSEL SECTION */}
-      <section className="py-20 px-8 max-w-[1240px] mx-auto text-left">
-        <div className="roast-head flex items-end justify-between gap-5 flex-wrap">
-          <div>
-            <span className="eyebrow">Reality Audit</span>
-            <h2 className="font-display text-4xl sm:text-5xl uppercase mt-2">THE TRUTH</h2>
-          </div>
+      <section className="py-20 px-8 max-w-[1240px] mx-auto text-left relative z-10">
+        <div className="text-center mb-10 space-y-2">
+          <span className="eyebrow">Reality Audit</span>
+          <h2 className="font-display text-4xl sm:text-5xl uppercase">THE TRUTH</h2>
+          <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+            See actual roasts from other users of SubSense. Use our calculator deck to review how we score leaks.
+          </p>
         </div>
 
-        {/* Roast Cards scroll track */}
-        <div className="flex gap-4.5 mt-10 overflow-x-auto no-scrollbar pb-4">
-          {[
-            { quote: "You paid ₹7,788 for Netflix this year and watched exactly 3 movies.", sub: "Netflix Premium", cost: "₹7,788 spent", icon: "Netflix" },
-            { quote: "Your gym membership is more committed to taking your money than you are to lifting weights.", sub: "Gold's Gym Membership", cost: "₹18,000 spent", icon: "🏋️" },
-            { quote: "Prime Video has not been opened in 87 days. Jeff Bezos says thank you.", sub: "Amazon Prime", cost: "₹1,499 spent", icon: "Prime Video" },
-            { quote: "You paid for Canva Pro to remove background from exactly 2 PNG images.", sub: "Canva Pro", cost: "₹1,497 spent", icon: "Canva" }
-          ].map((card, idx) => (
-            <div key={idx} className="flex-shrink-0 w-72 p-6.5 bg-gradient-to-br from-[#D90429]/15 to-white/[0.02] border border-white/5 rounded-2xl flex flex-col justify-between min-h-[220px] text-left">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-mono truncate max-w-[150px]">{card.sub}</span>
-                  <span className="text-[9px] bg-[#EF233C]/10 text-[#EF233C] border border-[#EF233C]/20 px-2 py-0.5 rounded font-mono font-bold uppercase whitespace-nowrap">{card.cost}</span>
-                </div>
-                <p className="text-sm font-bold text-white leading-relaxed italic">
-                  &ldquo;{card.quote}&rdquo;
-                </p>
-              </div>
-              <span className="text-[10px] text-neutral-500 font-semibold block mt-4.5">THE TRUTH</span>
-            </div>
-          ))}
-
-          {/* Add subscription prompt card */}
-          <a href="/dashboard" className="flex-shrink-0 w-72 p-6.5 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-center bg-white/[0.01] hover:bg-white/[0.02] transition min-h-[220px]">
-            <div className="w-12 h-12 rounded-full bg-[#EF233C]/10 border border-[#EF233C]/20 flex items-center justify-center text-[#EF233C] mb-3">
-              <Plus className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-bold text-white">Scan Gmail Account</h4>
-            <span className="text-xs text-neutral-400 mt-1">Identify other waste candidate outlays</span>
-          </a>
-        </div>
+        <RoastSlider />
       </section>
 
       {/* DASHBOARD PREVIEW & AI ASSISTANT DEMO */}

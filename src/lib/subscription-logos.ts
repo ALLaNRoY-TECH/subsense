@@ -183,6 +183,120 @@ export const LOGO_MAPPINGS: Record<string, LogoAsset> = {
         </linearGradient>
       </defs>
     </svg>`
+  },
+  sonyliv: {
+    bgColor: "bg-[#0A0D14]",
+    borderColor: "border-yellow-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <rect x="2" y="2" width="20" height="20" rx="4" fill="#0A0D14" stroke="#D9A74A" stroke-width="1"/>
+      <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="950" font-size="10" fill="#D9A74A">LIV</text>
+    </svg>`
+  },
+  crunchyroll: {
+    bgColor: "bg-[#1E120A]",
+    borderColor: "border-orange-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <circle cx="12" cy="12" r="9" fill="#FF6600"/>
+      <circle cx="14" cy="12" r="6" fill="#1E120A"/>
+      <circle cx="15.5" cy="12" r="3.5" fill="#FF6600"/>
+      <circle cx="16.5" cy="12" r="1.5" fill="#1E120A"/>
+    </svg>`
+  },
+  duolingo: {
+    bgColor: "bg-[#1E2E0A]",
+    borderColor: "border-green-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <circle cx="12" cy="12" r="9" fill="#58CC02"/>
+      <circle cx="9" cy="10" r="1.5" fill="#FFFFFF"/>
+      <circle cx="15" cy="10" r="1.5" fill="#FFFFFF"/>
+      <circle cx="9" cy="10" r="0.7" fill="#000000"/>
+      <circle cx="15" cy="10" r="0.7" fill="#000000"/>
+      <path d="M10 14.5c1 1 3 1 4 0" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`
+  },
+  linkedinpremium: {
+    bgColor: "bg-[#002D59]",
+    borderColor: "border-sky-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <rect x="2" y="2" width="20" height="20" rx="3" fill="#0077B5"/>
+      <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="11" fill="#FFFFFF">in</text>
+    </svg>`
+  },
+  notionai: {
+    bgColor: "bg-black",
+    borderColor: "border-neutral-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <rect width="24" height="24" rx="4" fill="#FFFFFF"/>
+      <path d="M4.5 5.5v13L15 19l4.5-13.5L4.5 5.5z" fill="#000000"/>
+      <path d="M6 7l11 1.5v1.5L14.5 10v6l2.5.5V18l-8.5-1V15.5l2-.5V9.5L6 7.5V7z" fill="#FFFFFF"/>
+    </svg>`
+  },
+  githubcopilot: {
+    bgColor: "bg-black",
+    borderColor: "border-neutral-700/30",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <circle cx="12" cy="12" r="10" fill="#24292F"/>
+      <path d="M12 4a8 8 0 00-2.8 15.5c.4.1.5-.2.5-.4v-1.4c-2.2.5-2.7-1.1-2.7-1.1-.4-.9-1-1.2-1-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.2-.1-.2-.4-1.1.1-2.2 0 0 .7-.2 2.2.8a7.6 7.6 0 014 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 2 .1 2.2.5.6.8 1.3.8 2.2 0 3.1-1.9 3.8-3.7 4 .3.3.6.8.6 1.6V18c0 .2.1.5.5.4A8 8 0 0012 4z" fill="#FFFFFF"/>
+    </svg>`
+  },
+  figmaprofessional: {
+    bgColor: "bg-black",
+    borderColor: "border-neutral-700/30",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <path d="M8.5 6a3.5 3.5 0 010 7H5V6h3.5zm0 7a3.5 3.5 0 110 7H5v-7h3.5zm7-7a3.5 3.5 0 11-3.5 3.5c0-1.9 1.6-3.5 3.5-3.5zm-3.5 7a3.5 3.5 0 013.5 3.5c0 1.9-1.6 3.5-3.5 3.5V13zm3.5 0a3.5 3.5 0 11-3.5-3.5h3.5V13z" fill="#F24E1E"/>
+      <path d="M12 9.5a3.5 3.5 0 11-3.5-3.5H12v3.5z" fill="#A259FF"/>
+      <path d="M5 16.5a3.5 3.5 0 013.5-3.5H12v3.5A3.5 3.5 0 018.5 20H5v-3.5z" fill="#1ABC9C"/>
+      <path d="M15.5 16.5a3.5 3.5 0 11-3.5-3.5h3.5v3.5z" fill="#19B5FE"/>
+      <path d="M15.5 9.5a3.5 3.5 0 11-3.5-3.5h3.5v3.5z" fill="#FF7262"/>
+    </svg>`
+  },
+  midjourney: {
+    bgColor: "bg-[#090D14]",
+    borderColor: "border-sky-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <circle cx="12" cy="12" r="10" fill="#090D14" stroke="#8A99AD" stroke-width="1"/>
+      <path d="M6 12h12M12 6v12M9 9l6 6M15 9l-6 6" stroke="#8A99AD" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`
+  },
+  cursor: {
+    bgColor: "bg-black",
+    borderColor: "border-sky-400/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-2">
+      <path d="M5.5 3.5l14 8.5-6.5 1.5 5 6-2 1.5-5-6-5.5 5.5V3.5z" fill="#58B2FF"/>
+    </svg>`
+  },
+  perplexitypro: {
+    bgColor: "bg-[#0D1C1B]",
+    borderColor: "border-emerald-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-2">
+      <circle cx="12" cy="12" r="10" fill="#0D1C1B"/>
+      <path d="M12 5.5v13M5.5 12h13" stroke="#20C997" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="5" stroke="#20C997" stroke-width="1.5" fill="none"/>
+    </svg>`
+  },
+  zeptopass: {
+    bgColor: "bg-[#1E0522]",
+    borderColor: "border-purple-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <rect width="24" height="24" rx="12" fill="#D90429"/>
+      <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="950" font-size="11" fill="#FFFFFF">Zp</text>
+    </svg>`
+  },
+  swiggyone: {
+    bgColor: "bg-[#1E0F05]",
+    borderColor: "border-orange-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <rect width="24" height="24" rx="12" fill="#FC8019"/>
+      <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="11" fill="#FFFFFF">1</text>
+    </svg>`
+  },
+  zomatogold: {
+    bgColor: "bg-[#1C0508]",
+    borderColor: "border-red-500/20",
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+      <rect width="24" height="24" rx="12" fill="#CB202D"/>
+      <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="11" fill="#FFD700">G</text>
+    </svg>`
   }
 };
 

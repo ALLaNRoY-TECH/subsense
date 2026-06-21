@@ -11,28 +11,28 @@ interface ParserRule {
   keywords: string[];
   defaultPrice: number;
   category: string;
-  frequency: "monthly" | "yearly";
 }
 
 const PARSING_RULES: ParserRule[] = [
-  { brand: "Netflix", keywords: ["netflix"], defaultPrice: 649, category: "Entertainment", frequency: "monthly" },
-  { brand: "Spotify", keywords: ["spotify"], defaultPrice: 119, category: "Music", frequency: "monthly" },
-  { brand: "Prime Video", keywords: ["prime video", "amazon prime"], defaultPrice: 299, category: "Entertainment", frequency: "monthly" },
-  { brand: "Disney+ Hotstar", keywords: ["hotstar", "disney+"], defaultPrice: 299, category: "Entertainment", frequency: "monthly" },
-  { brand: "ChatGPT Plus", keywords: ["openai", "chatgpt"], defaultPrice: 1999, category: "AI & Tech", frequency: "monthly" },
-  { brand: "Canva Pro", keywords: ["canva"], defaultPrice: 499, category: "Design", frequency: "monthly" },
-  { brand: "Adobe Creative Cloud", keywords: ["adobe"], defaultPrice: 4230, category: "Design", frequency: "monthly" },
-  { brand: "YouTube Premium", keywords: ["youtube", "google play"], defaultPrice: 129, category: "Entertainment", frequency: "monthly" },
-  { brand: "Google One", keywords: ["google one", "google storage"], defaultPrice: 130, category: "Cloud", frequency: "monthly" },
-  { brand: "Microsoft 365", keywords: ["microsoft 365", "office 365"], defaultPrice: 489, category: "Productivity", frequency: "monthly" },
-  { brand: "Apple Music", keywords: ["apple music", "itunes"], defaultPrice: 99, category: "Music", frequency: "monthly" }
+  { brand: "Netflix", keywords: ["netflix"], defaultPrice: 649, category: "Entertainment" },
+  { brand: "Spotify", keywords: ["spotify"], defaultPrice: 119, category: "Music" },
+  { brand: "Amazon Prime", keywords: ["amazon prime", "amazonprime"], defaultPrice: 299, category: "Entertainment" },
+  { brand: "Prime Video", keywords: ["prime video", "primevideo"], defaultPrice: 299, category: "Entertainment" },
+  { brand: "ChatGPT Plus", keywords: ["openai", "chatgpt"], defaultPrice: 1999, category: "AI & Tech" },
+  { brand: "Canva Pro", keywords: ["canva"], defaultPrice: 499, category: "Design" },
+  { brand: "Adobe Creative Cloud", keywords: ["adobe", "creative cloud"], defaultPrice: 4230, category: "Design" },
+  { brand: "YouTube Premium", keywords: ["youtube premium", "youtube membership"], defaultPrice: 129, category: "Entertainment" },
+  { brand: "Google One", keywords: ["google one", "google storage"], defaultPrice: 130, category: "Cloud" },
+  { brand: "Disney+ Hotstar", keywords: ["hotstar", "disney+"], defaultPrice: 299, category: "Entertainment" },
+  { brand: "Microsoft 365", keywords: ["microsoft 365", "office 365"], defaultPrice: 489, category: "Productivity" },
+  { brand: "Apple Music", keywords: ["apple music", "itunes"], defaultPrice: 99, category: "Music" }
 ];
 
-// Parser helper to extract prices using regex
+// Parser helper to extract prices using regex (support ₹, $, €, Rs., INR, USD, EUR)
 function parsePrice(text: string, defaultVal: number): { price: number; currency: string } {
-  // Regex looking for common currency markers: ₹, $, Rs., INR followed by digits
   const rupeeRegex = /(?:₹|Rs\.?|INR)\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i;
-  const dollarRegex = /\$\s*(\d+(?:\.\d{2})?)/;
+  const dollarRegex = /(?:\$|USD)\s*(\d+(?:\.\d{2})?)/i;
+  const euroRegex = /(?:€|EUR)\s*(\d+(?:\.\d{2})?)/i;
   
   const rupeeMatch = text.match(rupeeRegex);
   if (rupeeMatch) {
@@ -44,8 +44,25 @@ function parsePrice(text: string, defaultVal: number): { price: number; currency
   if (dollarMatch) {
     return { price: parseFloat(dollarMatch[1]), currency: "$" };
   }
+
+  const euroMatch = text.match(euroRegex);
+  if (euroMatch) {
+    return { price: parseFloat(euroMatch[1]), currency: "€" };
+  }
   
   return { price: defaultVal, currency: "₹" };
+}
+
+// Parser helper to detect frequency (monthly, yearly, trial)
+function parseFrequency(subject: string, snippet: string): "monthly" | "yearly" | "trial" {
+  const fullText = (subject + " " + snippet).toLowerCase();
+  if (fullText.includes("trial") || fullText.includes("free for") || fullText.includes("free trial")) {
+    return "trial";
+  }
+  if (fullText.includes("year") || fullText.includes("annual") || fullText.includes("12-month") || fullText.includes("12 month") || fullText.includes("/yr") || fullText.includes("per year")) {
+    return "yearly";
+  }
+  return "monthly";
 }
 
 export async function POST(request: Request) {
@@ -88,7 +105,7 @@ export async function POST(request: Request) {
       { user_id: userId, name: "Prime Video", price: 299, currency: "₹", category: "Entertainment", status: "wasting", last_used: "87 days ago", billing_date: "18th of month", billing_frequency: "monthly", logo_url: getSubscriptionLogo("Prime Video").svg, gmail_message_id: "msg-prime-demo" },
       { user_id: userId, name: "Canva Pro", price: 499, currency: "₹", category: "Design", status: "duplicate", last_used: "Last week", billing_date: "24th of month", billing_frequency: "monthly", logo_url: getSubscriptionLogo("Canva Pro").svg, gmail_message_id: "msg-canva-demo" },
       { user_id: userId, name: "Adobe Creative Cloud", price: 4230, currency: "₹", category: "Design", status: "active", last_used: "3 days ago", billing_date: "9th of month", billing_frequency: "monthly", logo_url: getSubscriptionLogo("Adobe").svg, gmail_message_id: "msg-adobe-demo" },
-      { user_id: userId, name: "iCloud+ 2TB", price: 749, currency: "₹", category: "Cloud", status: "active", last_used: "Daily", billing_date: "28th of month", billing_frequency: "monthly", logo_url: getSubscriptionLogo("iCloud").svg, gmail_message_id: "msg-icloud-demo" }
+      { user_id: userId, name: "YouTube Premium", price: 129, currency: "₹", category: "Entertainment", status: "active", last_used: "Daily", billing_date: "17th of month", billing_frequency: "monthly", logo_url: getSubscriptionLogo("YouTube Premium").svg, gmail_message_id: "msg-youtube-demo" }
     ];
 
     // Bulk upsert into subscriptions database
@@ -106,6 +123,8 @@ export async function POST(request: Request) {
       success: true,
       scannedCount: 85,
       foundCount: sandboxSubs.length,
+      subscriptionsCount: sandboxSubs.length,
+      duplicatesIgnored: 0,
       subscriptions: sandboxSubs
     });
   }
@@ -131,22 +150,43 @@ export async function POST(request: Request) {
 
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    // Gmail query filter targeting invoice receipts
-    const searchQuery = "subject:(receipt OR invoice OR billing OR renewal OR payment OR confirmed OR charged OR subscription OR order)";
+    // 12 Months Ago search query calculation
+    const dateLimit = new Date();
+    dateLimit.setMonth(dateLimit.getMonth() - 12);
+    const formattedDate = `${dateLimit.getFullYear()}/${String(dateLimit.getMonth() + 1).padStart(2, "0")}/${String(dateLimit.getDate()).padStart(2, "0")}`;
+
+    const searchQuery = `subject:(receipt OR invoice OR billing OR renewal OR payment OR confirmed OR charged OR subscription OR order) after:${formattedDate}`;
     
     const listRes = await gmail.users.messages.list({
       userId: "me",
       q: searchQuery,
-      maxResults: 40
+      maxResults: 150
     });
 
     const messages = listRes.data.messages || [];
     let scannedCount = messages.length;
+    let foundCount = 0;
+    let newSubscriptionsSaved = 0;
+    let duplicatesIgnored = 0;
     let foundSubs: any[] = [];
+
+    // Query existing subscriptions to identify duplicates
+    const { data: existingSubs } = await supabase
+      .from("subscriptions")
+      .select("gmail_message_id")
+      .eq("user_id", userId)
+      .not("gmail_message_id", "is", null);
+    const existingMessageIds = new Set(existingSubs?.map((s: any) => s.gmail_message_id) || []);
 
     for (const msg of messages) {
       if (!msg.id) continue;
       
+      // If we already have this receipt parsed, track duplicate stats and skip
+      if (existingMessageIds.has(msg.id)) {
+        duplicatesIgnored++;
+        continue;
+      }
+
       const details = await gmail.users.messages.get({
         userId: "me",
         id: msg.id
@@ -164,15 +204,24 @@ export async function POST(request: Request) {
       );
 
       if (matchingRule) {
+        foundCount++;
         const { price, currency } = parsePrice(bodyText, matchingRule.defaultPrice);
+        const frequency = parseFrequency(subject, snippet);
+        
         const billingDate = dateHeader ? new Date(dateHeader) : new Date();
         const nextRenewal = new Date(billingDate);
-        nextRenewal.setMonth(nextRenewal.getMonth() + 1);
+        if (frequency === "yearly") {
+          nextRenewal.setFullYear(nextRenewal.getFullYear() + 1);
+        } else if (frequency === "trial") {
+          nextRenewal.setDate(nextRenewal.getDate() + 14); // estimate 14 days for trial
+        } else {
+          nextRenewal.setMonth(nextRenewal.getMonth() + 1);
+        }
 
-        // Determine if service is active or wasting (default mock status logic based on search keyword triggers)
         let status: "active" | "wasting" | "duplicate" = "active";
+        // Simple wasting seed heuristic for specific brands to keep the UI interesting
         if (matchingRule.brand === "Netflix" || matchingRule.brand === "Prime Video") {
-          status = "wasting"; // Seed wastes to prove the features work
+          status = "wasting";
         }
 
         const subItem = {
@@ -185,13 +234,18 @@ export async function POST(request: Request) {
           last_used: status === "wasting" ? "30+ days ago" : "Yesterday",
           billing_date: `${billingDate.getDate()}th of month`,
           renewal_date: nextRenewal.toISOString(),
-          billing_frequency: matchingRule.frequency,
+          billing_frequency: frequency,
           logo_url: getSubscriptionLogo(matchingRule.brand).svg,
           gmail_message_id: msg.id
         };
 
-        await supabase.from("subscriptions").upsert(subItem);
-        foundSubs.push(subItem);
+        const { error: upsertError } = await supabase.from("subscriptions").upsert(subItem);
+        if (!upsertError) {
+          newSubscriptionsSaved++;
+          foundSubs.push(subItem);
+        } else {
+          console.error("Supabase upsert failed inside scanner:", upsertError);
+        }
       }
     }
 
@@ -200,13 +254,15 @@ export async function POST(request: Request) {
       user_id: userId,
       status: "completed",
       scanned_count: scannedCount,
-      found_count: foundSubs.length
+      found_count: foundCount
     });
 
     return NextResponse.json({
       success: true,
       scannedCount,
-      foundCount: foundSubs.length,
+      foundCount,
+      subscriptionsCount: newSubscriptionsSaved,
+      duplicatesIgnored,
       subscriptions: foundSubs
     });
 
@@ -221,3 +277,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Scanner failed" }, { status: 500 });
   }
 }
+

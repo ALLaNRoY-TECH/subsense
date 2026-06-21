@@ -69,6 +69,19 @@ export default function Dashboard() {
   const [newCurrency, setNewCurrency] = useState("₹");
   const [newFreq, setNewFreq] = useState("monthly");
 
+  // Subscription detail drawer selection state
+  const [selectedSub, setSelectedSub] = useState<any | null>(null);
+
+  // Gemini AI insights state
+  const [aiInsights, setAiInsights] = useState<{
+    summary: string;
+    savings: string;
+    healthScore: number;
+    roast: string;
+    recommendations: string[];
+  } | null>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+
   // Fetch Authentication State
   const checkAuth = async () => {
     try {
@@ -97,6 +110,23 @@ export default function Dashboard() {
     }
   };
 
+  // Fetch AI Insights
+  const fetchInsights = async () => {
+    if (!auth?.authenticated) return;
+    setLoadingInsights(true);
+    try {
+      const res = await fetch("/api/insights");
+      const data = await res.json();
+      if (res.ok && !data.error) {
+        setAiInsights(data);
+      }
+    } catch (e) {
+      console.error("Fetch insights error:", e);
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -106,6 +136,12 @@ export default function Dashboard() {
       fetchSubscriptions();
     }
   }, [auth]);
+
+  useEffect(() => {
+    if (auth?.authenticated) {
+      fetchInsights();
+    }
+  }, [subscriptions]);
 
   // Handle Logout
   const handleLogout = async () => {
@@ -124,33 +160,37 @@ export default function Dashboard() {
     setScanProgress(10);
     setScanLogs(["Connecting to Google API bridge...", "Fetching secure session metadata."]);
     
-    // Simulate steps
     setTimeout(() => {
       setScanState("scanning");
       setScanProgress(40);
-      setScanLogs(prev => [...prev, "Querying inbox receipts, invoices, and transaction logs..."]);
+      setScanLogs(prev => [...prev, "Querying inbox receipts, invoices, and transaction logs (last 12 months)..."]);
     }, 1000);
 
     try {
       const res = await fetch("/api/scan/gmail", { method: "POST" });
       const data = await res.json();
       
-      setScanProgress(80);
-      setScanLogs(prev => [
-        ...prev, 
-        `Analyzing billing signatures... Discovered ${data.foundCount || 0} subscriptions.`
-      ]);
+      if (res.ok && data.success) {
+        setScanProgress(80);
+        setScanLogs(prev => [
+          ...prev, 
+          `Scanned ${data.scannedCount} emails. Found ${data.foundCount} receipts.`,
+          `Added ${data.subscriptionsCount} new subscriptions to database.`,
+          `Skipped ${data.duplicatesIgnored} duplicate receipts.`
+        ]);
 
-      setTimeout(() => {
-        setScanState("finished");
-        setScanProgress(100);
-        setDetectedCount(data.foundCount || 0);
-        // Refresh items
-        fetchSubscriptions();
-      }, 1000);
-
+        setTimeout(() => {
+          setScanState("finished");
+          setScanProgress(100);
+          setDetectedCount(data.subscriptionsCount || 0);
+          fetchSubscriptions();
+        }, 1000);
+      } else {
+        throw new Error(data.error || "Scan failed");
+      }
     } catch (e) {
       console.error("Gmail scanning error:", e);
+      setScanLogs(prev => [...prev, `Scan failed: ${e instanceof Error ? e.message : String(e)}`]);
       setScanState("idle");
     }
   };
@@ -223,7 +263,7 @@ export default function Dashboard() {
             setPdfScanState("found");
           } else {
             setPdfScanState("idle");
-            alert("No recurring subscriptions found in statement.");
+            alert(data.message || "No recurring subscriptions found in statement.");
           }
         }, 1500);
 
@@ -235,26 +275,9 @@ export default function Dashboard() {
   };
 
   const importPdfSub = async () => {
-    if (!scannedSubDetails) return;
-    try {
-      const res = await fetch("/api/subscriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: scannedSubDetails.merchant,
-          price: scannedSubDetails.price,
-          currency: scannedSubDetails.currency,
-          category: scannedSubDetails.category,
-          status: "wasting" // Mark bank items as waste candidate to optimize
-        })
-      });
-      if (res.ok) {
-        setPdfScanState("done");
-        fetchSubscriptions();
-      }
-    } catch (e) {
-      console.error("PDF import error:", e);
-    }
+    // PDF Scanner automatically merged the subscriptions on the backend.
+    setPdfScanState("done");
+    fetchSubscriptions();
   };
 
   // ---------------- AI CHAT HANDLER (GEMINI) ----------------
@@ -548,6 +571,53 @@ Allan Carter`);
               ))}
             </div>
 
+            {/* Gemini AI Roast Widget */}
+            {loadingInsights ? (
+              <div className="p-6 rounded-2xl bg-white/[0.01] border border-white/5 text-center text-xs text-white/30 animate-pulse">
+                <RefreshCw className="w-5 h-5 text-crimson animate-spin mx-auto mb-2" />
+                Refining AI Roasts & Savings Summary...
+              </div>
+            ) : aiInsights ? (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* AI Roast (8 cols) */}
+                <div className="lg:col-span-8 p-6 rounded-2xl border border-crimson/25 bg-gradient-to-br from-[#D90429]/10 to-white/[0.01] relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+                  <div className="absolute top-3.5 left-6 bg-crimson px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md shadow-crimson/30 z-10">
+                    <Flame className="w-3.5 h-3.5 fill-white animate-bounce" />
+                    AI SPENDING ROAST
+                  </div>
+                  <div className="my-6">
+                    <p className="text-base sm:text-lg font-bold text-white leading-relaxed italic animate-pulse">
+                      &ldquo;{aiInsights.roast}&rdquo;
+                    </p>
+                  </div>
+                  <div className="text-[10px] text-white/45 font-mono tracking-wider border-t border-white/5 pt-3 uppercase">
+                    🔥 SUMMARY: {aiInsights.summary}
+                  </div>
+                </div>
+
+                {/* AI Savings Suggestions (4 cols) */}
+                <div className="lg:col-span-4 p-6 rounded-2xl bg-white/[0.01] border border-white/5 flex flex-col justify-between min-h-[180px]">
+                  <div>
+                    <h4 className="text-xs font-bold text-white/50 uppercase tracking-widest flex items-center gap-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-crimson" />
+                      AI AUDIT RECOMMENDATIONS
+                    </h4>
+                    <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+                      {aiInsights.recommendations?.map((rec, i) => (
+                        <div key={i} className="text-xs text-white/80 bg-white/[0.02] border border-white/5 p-2.5 rounded-lg flex items-start gap-2">
+                          <span className="text-[#EF233C] mt-0.5">•</span>
+                          <p>{rec}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-white/35 font-mono tracking-wider border-t border-white/5 pt-3 uppercase">
+                    💡 SAVINGS: {aiInsights.savings}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             {/* Core anomalies / duplicates notifications */}
             {duplicateAlerts.length > 0 && (
               <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex gap-3 text-xs items-start">
@@ -603,7 +673,7 @@ Allan Carter`);
                     </div>
                   ) : (
                     filteredSubs.slice(0, 5).map(sub => (
-                      <div key={sub.id} className="p-4 flex items-center justify-between hover:bg-white/[0.01] transition">
+                      <div key={sub.id} onClick={() => setSelectedSub(sub)} className="p-4 flex items-center justify-between hover:bg-white/[0.02] cursor-pointer transition">
                         <div className="flex items-center gap-3.5">
                           {/* Render brand SVG vector safely */}
                           <div 
@@ -639,7 +709,10 @@ Allan Carter`);
                           
                           {sub.status !== "active" && (
                             <button
-                              onClick={() => initiateCancelRoute(sub)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                initiateCancelRoute(sub);
+                              }}
                               className="px-2.5 py-1.5 rounded-lg bg-crimson hover:brightness-110 text-white font-bold text-[9px] transition cursor-pointer"
                             >
                               Cancel AI
@@ -743,7 +816,7 @@ Allan Carter`);
                 <div className="py-12 text-center text-xs text-white/30 italic">No records matches query options.</div>
               ) : (
                 filteredSubs.map(sub => (
-                  <div key={sub.id} className="p-4 flex items-center justify-between hover:bg-white/[0.01] transition-all">
+                  <div key={sub.id} onClick={() => setSelectedSub(sub)} className="p-4 flex items-center justify-between hover:bg-white/[0.02] cursor-pointer transition-all">
                     <div className="flex items-center gap-4.5">
                       <div 
                         className="w-10 h-10 flex items-center justify-center rounded-xl bg-black border border-white/5 flex-shrink-0"
@@ -769,7 +842,10 @@ Allan Carter`);
                       <span className="text-sm font-mono font-bold text-white">{sub.currency}{sub.price}</span>
                       
                       <button
-                        onClick={() => handleDeleteSub(sub.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSub(sub.id);
+                        }}
                         className="p-2 rounded-lg bg-red-500/10 hover:bg-crimson text-crimson hover:text-white transition cursor-pointer"
                       >
                         <Trash className="w-3.5 h-3.5" />
@@ -1008,6 +1084,156 @@ Allan Carter`);
         )}
 
       </main>
+
+      {/* Subscription Details Drawer */}
+      <AnimatePresence>
+        {selectedSub && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedSub(null)}
+              className="fixed inset-0 bg-black/80 z-40"
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#0D0D0E] border-l border-white/10 p-8 z-50 overflow-y-auto flex flex-col justify-between shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+            >
+              <div className="space-y-8 text-left">
+                {/* Header */}
+                <div className="flex justify-between items-center pb-4 border-b border-white/5">
+                  <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-mono">Subscription Audit Profile</span>
+                  <button 
+                    onClick={() => setSelectedSub(null)}
+                    className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Brand Header */}
+                <div className="flex items-center gap-5">
+                  <div 
+                    className="w-16 h-16 flex items-center justify-center rounded-2xl bg-[#050505] border border-white/10 shadow-lg p-2.5 flex-shrink-0"
+                    dangerouslySetInnerHTML={{ __html: selectedSub.logo_url }}
+                  />
+                  <div>
+                    <h3 className="text-2xl font-black tracking-tight text-white">{selectedSub.name}</h3>
+                    <span className="text-[10px] text-[#EF233C] bg-[#EF233C]/10 border border-[#EF233C]/20 px-2.5 py-0.5 rounded-full inline-block mt-2 font-mono uppercase tracking-wider font-bold">
+                      {selectedSub.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Details List */}
+                <div className="space-y-4 pt-4">
+                  {[
+                    { label: "Price / Charge", value: `${selectedSub.currency}${selectedSub.price}` },
+                    { label: "Annualized Value", value: `₹${(selectedSub.billing_frequency === "yearly" ? selectedSub.price : selectedSub.price * 12).toLocaleString("en-IN")}` },
+                    { label: "Billing Cycle", value: selectedSub.billing_frequency, capitalized: true },
+                    { label: "Next Renewal Target", value: selectedSub.renewal_date ? new Date(selectedSub.renewal_date).toLocaleDateString("en-IN", { day: 'numeric', month: 'long', year: 'numeric' }) : selectedSub.billing_date || "15th of month" },
+                    { label: "Detection Origin", value: selectedSub.gmail_message_id ? "Gmail Secure Receipt" : selectedSub.last_used?.includes("Bank Statement") ? "Bank Credit Statement" : "Manual Input Ledger" },
+                    { label: "Current Audit Status", value: selectedSub.status, uppercase: true, badge: true }
+                  ].map((row, idx) => (
+                    <div key={idx} className="flex justify-between items-center py-3 border-b border-white/[0.03] text-xs">
+                      <span className="text-white/40 font-medium">{row.label}</span>
+                      {row.badge ? (
+                        <span className={`px-2.5 py-1 rounded font-mono font-bold text-[10px] border ${
+                          row.value === "active" 
+                            ? "bg-green-500/10 text-green-400 border-green-500/20" 
+                            : row.value === "wasting"
+                            ? "bg-red-500/10 text-crimson border-red-500/20 animate-pulse"
+                            : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        }`}>
+                          {row.value}
+                        </span>
+                      ) : (
+                        <span className={`font-semibold text-white ${row.capitalized ? "capitalize" : ""} ${row.uppercase ? "uppercase" : ""}`}>
+                          {row.value}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="space-y-3.5 pt-8 border-t border-white/5">
+                {selectedSub.status === "active" ? (
+                  <button
+                    onClick={async () => {
+                      const res = await fetch("/api/subscriptions", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: selectedSub.id, status: "wasting" })
+                      });
+                      if (res.ok) {
+                        setSelectedSub(null);
+                        fetchSubscriptions();
+                      }
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-red-500/10 text-white/70 hover:text-crimson border border-white/10 hover:border-crimson/20 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Ban className="w-4 h-4" />
+                    Flag as Unused / Waste Leak
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      const res = await fetch("/api/subscriptions", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: selectedSub.id, status: "active" })
+                      });
+                      if (res.ok) {
+                        setSelectedSub(null);
+                        fetchSubscriptions();
+                      }
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-[#EF233C]/10 hover:bg-[#EF233C]/20 text-[#EF233C] border border-[#EF233C]/35 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    Flag as Active / Approved Outlay
+                  </button>
+                )}
+
+                {selectedSub.status !== "active" && (
+                  <button
+                    onClick={() => {
+                      initiateCancelRoute(selectedSub);
+                      setSelectedSub(null);
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-deep-red to-crimson hover:brightness-110 text-xs font-bold text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-crimson/15"
+                  >
+                    <Flame className="w-4 h-4" />
+                    Generate Cancellation Proxy Email
+                  </button>
+                )}
+
+                <button
+                  onClick={async () => {
+                    const res = await fetch(`/api/subscriptions?id=${selectedSub.id}`, { method: "DELETE" });
+                    if (res.ok) {
+                      setSelectedSub(null);
+                      fetchSubscriptions();
+                    }
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-transparent border border-white/5 hover:border-red-500/20 text-white/30 hover:text-red-500 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Hide & Delete from Ledger
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Add Subscription Modal */}
       <AnimatePresence>
