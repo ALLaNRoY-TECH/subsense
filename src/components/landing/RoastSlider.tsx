@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Sparkles, ChevronLeft, ChevronRight, Share2, AlertOctagon } from "lucide-react";
+import { Flame, ChevronLeft, ChevronRight, Share2, AlertOctagon } from "lucide-react";
 
 interface RoastCard {
   quote: string;

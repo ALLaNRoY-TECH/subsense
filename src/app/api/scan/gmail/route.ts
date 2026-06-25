@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { google } from "googleapis";
-import { OAuth2Client } from "google-auth-library";
 import { supabase } from "@/lib/supabase";
 import { getSubscriptionLogo } from "@/lib/subscription-logos";
 
@@ -25,7 +24,15 @@ const PARSING_RULES: ParserRule[] = [
   { brand: "Google One", keywords: ["google one", "google storage"], defaultPrice: 130, category: "Cloud" },
   { brand: "Disney+ Hotstar", keywords: ["hotstar", "disney+"], defaultPrice: 299, category: "Entertainment" },
   { brand: "Microsoft 365", keywords: ["microsoft 365", "office 365"], defaultPrice: 489, category: "Productivity" },
-  { brand: "Apple Music", keywords: ["apple music", "itunes"], defaultPrice: 99, category: "Music" }
+  { brand: "Apple Music", keywords: ["apple music", "itunes"], defaultPrice: 99, category: "Music" },
+  { brand: "Notion AI", keywords: ["notion ai", "notion"], defaultPrice: 820, category: "Productivity" },
+  { brand: "GitHub Copilot", keywords: ["github copilot", "github"], defaultPrice: 820, category: "AI & Tech" },
+  { brand: "Claude", keywords: ["claude", "anthropic"], defaultPrice: 1650, category: "AI & Tech" },
+  { brand: "Figma", keywords: ["figma"], defaultPrice: 1240, category: "Design" },
+  { brand: "Cursor", keywords: ["cursor"], defaultPrice: 1650, category: "AI & Tech" },
+  { brand: "Dropbox", keywords: ["dropbox"], defaultPrice: 990, category: "Cloud" },
+  { brand: "Airtel", keywords: ["airtel payment", "airtel mobility"], defaultPrice: 299, category: "Utilities" },
+  { brand: "Jio", keywords: ["jio recharge", "reliance jio"], defaultPrice: 299, category: "Utilities" }
 ];
 
 // Parser helper to extract prices using regex (support ₹, $, €, Rs., INR, USD, EUR)
@@ -53,24 +60,31 @@ function parsePrice(text: string, defaultVal: number): { price: number; currency
   return { price: defaultVal, currency: "₹" };
 }
 
-// Parser helper to detect frequency (monthly, yearly, trial)
 function parseFrequency(subject: string, snippet: string): "monthly" | "yearly" | "trial" {
   const fullText = (subject + " " + snippet).toLowerCase();
-  if (fullText.includes("trial") || fullText.includes("free for") || fullText.includes("free trial")) {
-    return "trial";
-  }
   if (fullText.includes("year") || fullText.includes("annual") || fullText.includes("12-month") || fullText.includes("12 month") || fullText.includes("/yr") || fullText.includes("per year")) {
     return "yearly";
+  }
+  if (fullText.includes("trial") || fullText.includes("free for") || fullText.includes("free trial") || fullText.includes("try free")) {
+    return "trial";
   }
   return "monthly";
 }
 
-export async function POST(request: Request) {
+function parseStatus(subject: string, snippet: string, defaultStatus: "active" | "wasting" | "duplicate"): "active" | "wasting" | "duplicate" | "cancelled" | "expired" {
+  const fullText = (subject + " " + snippet).toLowerCase();
+  if (fullText.includes("cancel") || fullText.includes("cancellation")) return "cancelled";
+  if (fullText.includes("expire") || fullText.includes("expired")) return "expired";
+  if (fullText.includes("refund") || fullText.includes("refunded")) return "cancelled";
+  return defaultStatus;
+}
+
+export async function POST() {
   const cookieStore = await cookies();
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   // Record scanner scan state as running
@@ -88,7 +102,7 @@ export async function POST(request: Request) {
     .eq("id", userId);
 
   if (userError || !users || users.length === 0) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
   }
 
   const user = users[0];
@@ -121,11 +135,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      scannedCount: 85,
-      foundCount: sandboxSubs.length,
-      subscriptionsCount: sandboxSubs.length,
-      duplicatesIgnored: 0,
-      subscriptions: sandboxSubs
+      data: {
+        scannedCount: 85,
+        foundCount: sandboxSubs.length,
+        subscriptionsCount: sandboxSubs.length,
+        duplicatesIgnored: 0,
+        subscriptions: sandboxSubs
+      }
     });
   }
 
@@ -164,11 +180,11 @@ export async function POST(request: Request) {
     });
 
     const messages = listRes.data.messages || [];
-    let scannedCount = messages.length;
+    const scannedCount = messages.length;
     let foundCount = 0;
     let newSubscriptionsSaved = 0;
     let duplicatesIgnored = 0;
-    let foundSubs: any[] = [];
+    const foundSubs: Record<string, unknown>[] = [];
 
     // Query existing subscriptions to identify duplicates
     const { data: existingSubs } = await supabase
@@ -176,7 +192,7 @@ export async function POST(request: Request) {
       .select("gmail_message_id")
       .eq("user_id", userId)
       .not("gmail_message_id", "is", null);
-    const existingMessageIds = new Set(existingSubs?.map((s: any) => s.gmail_message_id) || []);
+    const existingMessageIds = new Set(existingSubs?.map((s: { gmail_message_id: string }) => s.gmail_message_id) || []);
 
     for (const msg of messages) {
       if (!msg.id) continue;
@@ -218,11 +234,11 @@ export async function POST(request: Request) {
           nextRenewal.setMonth(nextRenewal.getMonth() + 1);
         }
 
-        let status: "active" | "wasting" | "duplicate" = "active";
-        // Simple wasting seed heuristic for specific brands to keep the UI interesting
+        let defaultStatus: "active" | "wasting" | "duplicate" = "active";
         if (matchingRule.brand === "Netflix" || matchingRule.brand === "Prime Video") {
-          status = "wasting";
+          defaultStatus = "wasting";
         }
+        const status = parseStatus(subject, snippet, defaultStatus);
 
         const subItem = {
           user_id: userId,
@@ -259,11 +275,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      scannedCount,
-      foundCount,
-      subscriptionsCount: newSubscriptionsSaved,
-      duplicatesIgnored,
-      subscriptions: foundSubs
+      data: {
+        scannedCount,
+        foundCount,
+        subscriptionsCount: newSubscriptionsSaved,
+        duplicatesIgnored,
+        subscriptions: foundSubs
+      }
     });
 
   } catch (error) {
@@ -274,7 +292,7 @@ export async function POST(request: Request) {
       scanned_count: 0,
       found_count: 0
     });
-    return NextResponse.json({ error: "Scanner failed" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Scanner failed" }, { status: 500 });
   }
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ShieldCheck, Search, CheckCircle, RefreshCw, AlertTriangle } from "lucide-react";
+import { Mail, Search, CheckCircle, RefreshCw } from "lucide-react";
 
 interface DetectedSub {
   name: string;
@@ -37,7 +37,6 @@ export default function GmailScan() {
     setScanProgress(0);
   };
 
-  // Stage: Connecting
   useEffect(() => {
     if (scanState === "connecting") {
       const timer = setTimeout(() => {
@@ -48,7 +47,6 @@ export default function GmailScan() {
     }
   }, [scanState]);
 
-  // Stage: Scanning (Adding items one-by-one)
   useEffect(() => {
     if (scanState === "scanning") {
       const interval = setInterval(() => {
@@ -77,11 +75,9 @@ export default function GmailScan() {
 
   return (
     <div className="w-full max-w-3xl mx-auto glass-panel rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
-      {/* Background glow streak */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-crimson/10 rounded-full blur-3xl -z-10 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-deep-red/5 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 pb-6 mb-6 gap-4">
         <div>
           <h3 className="text-xl font-bold flex items-center gap-2">
@@ -92,15 +88,9 @@ export default function GmailScan() {
             Securely discover subscriptions without manual logging.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-white/40 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
-          <ShieldCheck className="w-4 h-4 text-green-400" />
-          <span>256-bit Bank Grade Security</span>
-        </div>
       </div>
 
-      {/* Main Body */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 min-h-[380px]">
-        {/* Terminal/Logs Column */}
         <div className="md:col-span-2 flex flex-col justify-between bg-black/60 rounded-xl border border-white/5 p-4 font-mono text-[11px] leading-relaxed text-white/70 h-[380px] overflow-hidden">
           <div className="flex flex-col gap-2 overflow-y-auto max-h-[320px] no-scrollbar">
             <div className="flex items-center gap-1.5 text-white/40 pb-1 border-b border-white/5">
@@ -110,10 +100,10 @@ export default function GmailScan() {
               <span className="ml-1 text-[10px]">subsense-ai-scanner ~ bash</span>
             </div>
             {scanState === "idle" && (
-              <span className="text-white/40 italic">Waiting to connect... Press "Scan Gmail Account" to begin simulator.</span>
+              <span className="text-white/40 italic">Waiting to connect... Press &quot;Scan Gmail Account&quot; to begin simulator.</span>
             )}
             {logs.map((log, index) => (
-              <motion.div
+              <motion.p
                 key={index}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -121,7 +111,7 @@ export default function GmailScan() {
                 className={log.startsWith("✓") ? "text-emerald-400" : log.includes("Error") ? "text-red-400" : "text-white/70"}
               >
                 {log.startsWith("✓") || log.startsWith("Scan:") ? "" : "> "}{log}
-              </motion.div>
+              </motion.p>
             ))}
             {scanState === "scanning" && (
               <motion.div
@@ -140,11 +130,11 @@ export default function GmailScan() {
           </div>
         </div>
 
-        {/* Results Column */}
         <div className="md:col-span-3 flex flex-col justify-between bg-white/[0.01] rounded-xl border border-white/5 p-4">
           <div className="flex flex-col h-full justify-between">
             <div className="mb-4">
-              <span className="text-xs uppercase tracking-wider text-white/40 font-semibold block mb-2">Detected Services</span>
+              <h3 className="text-xl font-bold text-white mt-4">Automated Inbox Extraction</h3>
+              <p className="text-sm text-white/50 mt-2 mb-6">Connect via read-only OAuth to extract historical receipts. We ignore personal mail. It&apos;s 100% private.</p>
               <div className="space-y-2.5 max-h-[250px] overflow-y-auto no-scrollbar pr-1">
                 <AnimatePresence>
                   {detectedList.length === 0 && (
@@ -153,7 +143,7 @@ export default function GmailScan() {
                       <span>No subscriptions loaded yet.</span>
                     </div>
                   )}
-                  {detectedList.map((sub, index) => (
+                  {detectedList.map((sub) => (
                     <motion.div
                       key={sub.name}
                       initial={{ opacity: 0, y: 15, scale: 0.95 }}

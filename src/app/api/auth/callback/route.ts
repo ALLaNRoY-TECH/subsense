@@ -32,16 +32,11 @@ export async function GET(request: Request) {
       console.error("Supabase demo user upsert failed:", upsertError);
       return NextResponse.redirect(new URL("/?error=database_error", request.url));
     }
-    console.log("Supabase user upsert success:", demoUser.id);
-
-    console.log("OAuth success (Demo Sandbox):", demoUser.email);
-    console.log("Session cookie created:", demoUser.id);
-
     const response = NextResponse.redirect(new URL("/dashboard", request.url));
     response.cookies.set("subsense_session", demoUser.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "strict",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/"
     });
@@ -106,16 +101,11 @@ export async function GET(request: Request) {
       console.error("Supabase user upsert failed:", upsertError);
       return NextResponse.redirect(new URL("/?error=database_error", request.url));
     }
-    console.log("Supabase user upsert success:", userData.id);
-
-    console.log("OAuth success:", profile.email);
-    console.log("Session cookie created:", profile.id);
-
     const response = NextResponse.redirect(new URL("/dashboard", request.url));
     response.cookies.set("subsense_session", profile.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "strict",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/"
     });

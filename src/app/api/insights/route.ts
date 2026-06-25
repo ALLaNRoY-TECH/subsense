@@ -57,7 +57,7 @@ export async function GET() {
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -70,14 +70,14 @@ export async function GET() {
       .eq("user_id", userId);
 
     const subs = activeSubs || [];
-    const totalSpend = subs.reduce((sum: number, s: any) => sum + s.price, 0);
-    const wasteSubs = subs.filter((s: any) => s.status !== "active");
-    const wasteSpend = wasteSubs.reduce((sum: number, s: any) => sum + s.price, 0);
-    const annualSpend = subs.reduce((sum: number, s: any) => {
+    const totalSpend = subs.reduce((sum: number, s: { price: number }) => sum + s.price, 0);
+    const wasteSubs = subs.filter((s: { status: string }) => s.status !== "active");
+    const wasteSpend = wasteSubs.reduce((sum: number, s: { price: number }) => sum + s.price, 0);
+    const annualSpend = subs.reduce((sum: number, s: { price: number; billing_frequency: string }) => {
       return sum + (s.billing_frequency === "yearly" ? s.price : s.price * 12);
     }, 0);
 
-    const categoryMap = subs.reduce((acc: Record<string, number>, s: any) => {
+    const categoryMap = subs.reduce((acc: Record<string, number>, s: { category: string; price: number }) => {
       acc[s.category] = (acc[s.category] || 0) + s.price;
       return acc;
     }, {});
@@ -85,11 +85,14 @@ export async function GET() {
     // If no subscriptions exist:
     if (subs.length === 0) {
       return NextResponse.json({
-        summary: "No active subscriptions were detected in your account.",
-        savings: "No immediate monthly and annual savings options are available because your subscription list is empty.",
-        healthScore: 100,
-        roast: "No subscriptions found. Your wallet is clean, or you haven't uploaded a bank statement or Gmail audit yet.",
-        recommendations: ["No active subscriptions were detected in your account."]
+        success: true,
+        data: {
+          summary: "No active subscriptions were detected in your account.",
+          savings: "No immediate monthly and annual savings options are available because your subscription list is empty.",
+          healthScore: 100,
+          roast: "No subscriptions found. Your wallet is clean, or you haven't uploaded a bank statement or Gmail audit yet.",
+          recommendations: ["No active subscriptions were detected in your account."]
+        }
       });
     }
 
@@ -97,15 +100,18 @@ export async function GET() {
     if (!apiKey) {
       const fallbackScore = Math.max(30, Math.min(100, Math.round(100 - (wasteSpend / totalSpend) * 80)));
       return NextResponse.json({
-        summary: `You are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You have ${subs.length} active platforms.`,
-        savings: `You can save up to ₹${wasteSpend.toLocaleString("en-IN")} monthly by optimizing ${wasteSubs.length} idle subscriptions.`,
-        healthScore: fallbackScore,
-        roast: subs.length > 0
-          ? `You have a health score of ${fallbackScore}/100. You are auto-billing subscriptions you haven't opened in a month.`
-          : "Your board is empty. Plug in a bank statement or Gmail so I can find something to roast.",
-        recommendations: wasteSubs.length > 0 
-          ? [`Cancel ${wasteSubs[0].name} to save ${wasteSubs[0].currency}${wasteSubs[0].price} immediately.`]
-          : ["You are clean! Keep auditing to maintain this budget."]
+        success: true,
+        data: {
+          summary: `You are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You have ${subs.length} active platforms.`,
+          savings: `You can save up to ₹${wasteSpend.toLocaleString("en-IN")} monthly by optimizing ${wasteSubs.length} idle subscriptions.`,
+          healthScore: fallbackScore,
+          roast: subs.length > 0
+            ? `You have a health score of ${fallbackScore}/100. You are auto-billing subscriptions you haven't opened in a month.`
+            : "Your board is empty. Plug in a bank statement or Gmail so I can find something to roast.",
+          recommendations: wasteSubs.length > 0 
+            ? [`Cancel ${wasteSubs[0].name} to save ${wasteSubs[0].currency}${wasteSubs[0].price} immediately.`]
+            : ["You are clean! Keep auditing to maintain this budget."]
+        }
       });
     }
 
@@ -153,7 +159,7 @@ CRITICAL: Do not use any markdown formatting (no bold **, no italic *, no headin
       } catch (innerErr) {
         console.error("Gemini Error:", innerErr);
         return NextResponse.json(
-          { error: String(innerErr) },
+          { success: false, error: String(innerErr) },
           { status: 500 }
         );
       }
@@ -206,14 +212,14 @@ CRITICAL: Do not use any markdown formatting (no bold **, no italic *, no headin
         } catch (fallbackError) {
           console.error("Gemini Error:", fallbackError);
           return NextResponse.json(
-            { error: String(fallbackError) },
+            { success: false, error: String(fallbackError) },
             { status: 500 }
           );
         }
       } else {
         console.error("Gemini Error:", geminiError);
         return NextResponse.json(
-          { error: String(geminiError) },
+          { success: false, error: String(geminiError) },
           { status: 500 }
         );
       }
@@ -234,11 +240,11 @@ CRITICAL: Do not use any markdown formatting (no bold **, no italic *, no headin
       parsed.recommendations = parsed.recommendations.map((rec: string) => cleanMarkdown(rec));
     }
 
-    return NextResponse.json(parsed);
+    return NextResponse.json({ success: true, data: parsed });
 
   } catch (error) {
     console.error("Gemini AI API GET Error:", error);
-    return NextResponse.json({ error: "AI completions failed: " + (error instanceof Error ? error.message : String(error)) }, { status: 500 });
+    return NextResponse.json({ success: false, error: "AI completions failed: " + (error instanceof Error ? error.message : String(error)) }, { status: 500 });
   }
 }
 
@@ -248,7 +254,7 @@ export async function POST(request: Request) {
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -267,13 +273,13 @@ export async function POST(request: Request) {
       activeSubs = data || [];
     }
 
-    const totalSpend = activeSubs.reduce((sum: number, s: any) => sum + s.price, 0);
-    const wasteSubs = activeSubs.filter((s: any) => s.status !== "active");
-    const wasteSpend = wasteSubs.reduce((sum: number, s: any) => sum + s.price, 0);
+    const totalSpend = activeSubs.reduce((sum: number, s: { price: number }) => sum + s.price, 0);
+    const wasteSubs = activeSubs.filter((s: { status: string }) => s.status !== "active");
+    const wasteSpend = wasteSubs.reduce((sum: number, s: { price: number }) => sum + s.price, 0);
 
     // If no subscriptions exist:
     if (activeSubs.length === 0) {
-      return NextResponse.json({ text: "No active subscriptions were detected in your account." });
+      return NextResponse.json({ success: true, data: { text: "No active subscriptions were detected in your account." } });
     }
 
     // Fallback if API key is missing
@@ -287,20 +293,20 @@ export async function POST(request: Request) {
         text = `You are spending ₹${totalSpend.toLocaleString("en-IN")} monthly on subscriptions. You haven't opened ${firstWaste} in a while, yet you are still happily auto-billing.`;
       } else if (action === "cancel") {
         const subName = prompt || "the service";
-        const matchingSub = activeSubs.find((s: any) => s.name.toLowerCase().includes(subName.toLowerCase()));
+        const matchingSub = activeSubs.find((s: { name: string; currency: string; price: number }) => s.name.toLowerCase().includes(subName.toLowerCase()));
         const priceText = matchingSub ? `${matchingSub.currency}${matchingSub.price}` : "your monthly outlay";
         text = `Sure, I've drafted a cancellation email for your ${subName} subscription. Tapping the Transmit button will send this out immediately, scrubbing ${priceText} from your billing cycle.`;
       } else {
-        const platformNames = activeSubs.map((s: any) => s.name).join(", ");
+        const platformNames = activeSubs.map((s: { name: string }) => s.name).join(", ");
         text = `Auditing completed. Discovered ${activeSubs.length} active platforms (${platformNames || "none"}). You are wasting ₹${wasteSpend} monthly on ${wasteSubs.length} unused or duplicate memberships. Recommended action: Cancel unused subscriptions immediately.`;
       }
 
-      return NextResponse.json({ text: cleanMarkdown(text), localFallback: true });
+      return NextResponse.json({ success: true, data: { text: cleanMarkdown(text), localFallback: true } });
     }
 
     // Real Gemini Chat
     const genAI = new GoogleGenerativeAI(apiKey);
-    let systemPrompt = `You are SubSense, a direct, intelligent, data-driven financial auditor.
+    const systemPrompt = `You are SubSense, a direct, intelligent, data-driven financial auditor.
 Your goal is to help users understand their subscription waste, expose their idle spending habits with the humorous/brutal truth, and provide actionable tips to cancel and optimize.
 Use ONLY the subscription data provided in this prompt. Never hallucinate or invent subscription names, prices, dates, or categories.
 
@@ -363,7 +369,7 @@ Here is the user's current subscription profile:
       } catch (innerErr) {
         console.error("Gemini Error:", innerErr);
         return NextResponse.json(
-          { error: String(innerErr) },
+          { success: false, error: String(innerErr) },
           { status: 500 }
         );
       }
@@ -421,14 +427,14 @@ Here is the user's current subscription profile:
         } catch (fallbackError) {
           console.error("Gemini Error:", fallbackError);
           return NextResponse.json(
-            { error: String(fallbackError) },
+            { success: false, error: String(fallbackError) },
             { status: 500 }
           );
         }
       } else {
         console.error("Gemini Error:", geminiError);
         return NextResponse.json(
-          { error: String(geminiError) },
+          { success: false, error: String(geminiError) },
           { status: 500 }
         );
       }
@@ -440,10 +446,10 @@ Here is the user's current subscription profile:
     // Strip markdown symbols and formatting
     text = cleanMarkdown(text);
 
-    return NextResponse.json({ text });
+    return NextResponse.json({ success: true, data: { text } });
 
   } catch (error) {
     console.error("Gemini AI API POST Error:", error);
-    return NextResponse.json({ error: "AI completions failed: " + (error instanceof Error ? error.message : String(error)) }, { status: 500 });
+    return NextResponse.json({ success: false, error: "AI completions failed: " + (error instanceof Error ? error.message : String(error)) }, { status: 500 });
   }
 }

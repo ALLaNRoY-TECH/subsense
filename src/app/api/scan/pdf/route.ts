@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-// @ts-ignore
+// @ts-expect-error No type definitions for pdf-parse
 import pdf from "pdf-parse/lib/pdf-parse.js";
 import { getSubscriptionLogo } from "@/lib/subscription-logos";
 import { supabase } from "@/lib/supabase";
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         flag: "duplicate"
       };
       
-      return NextResponse.json(mockResult);
+      return NextResponse.json({ success: true, data: mockResult });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     if (detectedSubs.length === 0) {
       return NextResponse.json({
         success: false,
-        message: "No recurring subscription transactions detected in the statement."
+        error: "No recurring subscription transactions detected in the statement."
       });
     }
 
@@ -141,12 +141,12 @@ export async function POST(request: Request) {
       .select("*")
       .eq("user_id", userId);
     
-    const existingMap = new Map<string, any>();
+    const existingMap = new Map<string, unknown>();
     if (existingSubs) {
-      existingSubs.forEach((sub: any) => existingMap.set(sub.name.toLowerCase(), sub));
+      existingSubs.forEach((sub: { name: string }) => existingMap.set(sub.name.toLowerCase(), sub));
     }
 
-    const mergedResults: any[] = [];
+    const mergedResults: Record<string, unknown>[] = [];
 
     for (const item of detectedSubs) {
       const brandName = item.brand;
@@ -181,7 +181,7 @@ export async function POST(request: Request) {
         logo_url: getSubscriptionLogo(brandName).svg
       };
 
-      const { data: insertData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("subscriptions")
         .upsert(subItem, { onConflict: "user_id,name" }) // Upserting based on user_id + name if unique, or standard insert
         .select();
@@ -210,9 +210,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      ...primarySub,
-      detected: mergedResults,
-      bank: bankName
+      data: {
+        ...primarySub,
+        detected: mergedResults,
+        bank: bankName
+      }
     });
 
   } catch (error) {

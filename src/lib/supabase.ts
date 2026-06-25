@@ -11,13 +11,13 @@ const realSupabase = isSupabaseConfigured
   : null;
 
 // Helper to interact with Local Storage for Sandbox Demo Mode
-const getLocalDB = (table: string): any[] => {
+const getLocalDB = (table: string): Record<string, unknown>[] => {
   if (typeof window === "undefined") return [];
   const data = localStorage.getItem(`subsense_db_${table}`);
   return data ? JSON.parse(data) : [];
 };
 
-const saveLocalDB = (table: string, data: any[]) => {
+const saveLocalDB = (table: string, data: Record<string, unknown>[]) => {
   if (typeof window === "undefined") return;
   localStorage.setItem(`subsense_db_${table}`, JSON.stringify(data));
 };
@@ -45,22 +45,22 @@ if (typeof window !== "undefined" && !isSupabaseConfigured) {
 }
 
 // Chainable mock builder for select queries
-const mockSelectChain = (table: string, currentData: any[]): any => {
-  const builder: any = {
-    eq: (col: string, val: any) => {
+const mockSelectChain = (table: string, currentData: Record<string, unknown>[]): unknown => {
+  const builder: Record<string, unknown> = {
+    eq: (col: string, val: unknown) => {
       const filtered = currentData.filter(item => item[col] === val);
       return mockSelectChain(table, filtered);
     },
     order: (col: string, { ascending = true } = {}) => {
       const sorted = [...currentData].sort((a, b) => {
-        if (a[col] < b[col]) return ascending ? -1 : 1;
-        if (a[col] > b[col]) return ascending ? 1 : -1;
+        if ((a[col] as number) < (b[col] as number)) return ascending ? -1 : 1;
+        if ((a[col] as number) > (b[col] as number)) return ascending ? 1 : -1;
         return 0;
       });
       return mockSelectChain(table, sorted);
     },
     // Make it Thenable (behaves like a Promise)
-    then: (onfulfilled: any) => {
+    then: (onfulfilled: (res: { data: unknown[], error: null }) => void) => {
       return Promise.resolve({ data: currentData, error: null }).then(onfulfilled);
     }
   };
@@ -68,13 +68,13 @@ const mockSelectChain = (table: string, currentData: any[]): any => {
 };
 
 // Chainable mock builder for delete queries
-const mockDeleteChain = (table: string, currentFilters: { col: string; val: any }[] = []): any => {
-  const builder: any = {
-    eq: (col: string, val: any) => {
+const mockDeleteChain = (table: string, currentFilters: { col: string; val: unknown }[] = []): unknown => {
+  const builder: Record<string, unknown> = {
+    eq: (col: string, val: unknown) => {
       return mockDeleteChain(table, [...currentFilters, { col, val }]);
     },
     // Make it Thenable (behaves like a Promise)
-    then: (onfulfilled: any) => {
+    then: (onfulfilled: (res: { data: null, error: null }) => void) => {
       const data = getLocalDB(table);
       const filtered = data.filter(item => {
         // Remove item if it matches ALL filters
@@ -89,14 +89,15 @@ const mockDeleteChain = (table: string, currentFilters: { col: string; val: any 
 };
 
 // Export active or mock client
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabase: any = realSupabase || {
   from: (table: string) => {
     return {
-      select: (columns = "*") => {
+      select: () => {
         const data = getLocalDB(table);
         return mockSelectChain(table, data);
       },
-      insert: (values: any | any[]) => {
+      insert: (values: Record<string, unknown> | Record<string, unknown>[]) => {
         const data = getLocalDB(table);
         const toInsert = Array.isArray(values) ? values : [values];
         const inserted = toInsert.map(val => ({
@@ -107,11 +108,11 @@ export const supabase: any = realSupabase || {
         saveLocalDB(table, [...data, ...inserted]);
         return Promise.resolve({ data: inserted, error: null });
       },
-      upsert: (values: any | any[]) => {
+      upsert: (values: Record<string, unknown> | Record<string, unknown>[]) => {
         const data = getLocalDB(table);
         const toUpsert = Array.isArray(values) ? values : [values];
         const current = [...data];
-        const processed: any[] = [];
+        const processed: Record<string, unknown>[] = [];
         
         toUpsert.forEach(item => {
           const idx = current.findIndex(c => c.id === item.id || (item.gmail_message_id && c.gmail_message_id === item.gmail_message_id));

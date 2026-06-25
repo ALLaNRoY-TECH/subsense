@@ -9,7 +9,7 @@ export async function GET() {
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -18,10 +18,10 @@ export async function GET() {
     .eq("user_id", userId);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ subscriptions: data || [] });
+  return NextResponse.json({ success: true, data: { subscriptions: data || [] } });
 }
 
 // POST: Add a new custom subscription
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     const { name, price, currency, category, status, billing_frequency } = body;
 
     if (!name || !price) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
     const brandAsset = getSubscriptionLogo(name);
@@ -61,13 +61,13 @@ export async function POST(request: Request) {
       .insert(subItem);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, subscription: data ? data[0] : subItem });
+    return NextResponse.json({ success: true, data: { subscription: data ? data[0] : subItem } });
   } catch (error) {
     console.error("Add subscription error:", error);
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
   }
 }
 
@@ -77,14 +77,14 @@ export async function DELETE(request: Request) {
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Missing id parameter" }, { status: 400 });
   }
 
   const { error } = await supabase
@@ -94,10 +94,10 @@ export async function DELETE(request: Request) {
     .eq("user_id", userId);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, data: null });
 }
 
 // PUT: Update a subscription
@@ -106,7 +106,7 @@ export async function PUT(request: Request) {
   const userId = cookieStore.get("subsense_session")?.value;
 
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -114,10 +114,10 @@ export async function PUT(request: Request) {
     const { id, status, name, price, category, last_used } = body;
 
     if (!id) {
-      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Missing id parameter" }, { status: 400 });
     }
 
-    const updateFields: any = {};
+    const updateFields: Record<string, unknown> = {};
     if (status) updateFields.status = status;
     if (name) {
       updateFields.name = name;
@@ -132,12 +132,12 @@ export async function PUT(request: Request) {
       .upsert({ id, user_id: userId, ...updateFields });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, subscription: data ? data[0] : null });
+    return NextResponse.json({ success: true, data: { subscription: data ? data[0] : null } });
   } catch (error) {
     console.error("Update subscription error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

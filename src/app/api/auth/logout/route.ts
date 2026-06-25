@@ -5,5 +5,5 @@ export async function POST() {
   const cookieStore = await cookies();
   cookieStore.delete("subsense_session");
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, data: null });
 }

@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  DollarSign, Activity, Bell, BarChart3, ShieldAlert, Sparkles, 
-  Trash2, Calendar, FileText, MessageSquare, ArrowLeft, Plus, 
+  DollarSign, Activity, BarChart3, ShieldAlert, Sparkles, 
+  Trash2, Calendar, FileText, Plus, 
   Search, Check, Trash, Upload, X, Send, Ban, RefreshCw, Flame, ShieldCheck,
   Mail
 } from "lucide-react";
+import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface Subscription {
@@ -16,16 +17,18 @@ interface Subscription {
   price: number;
   currency: string;
   category: string;
-  status: "active" | "wasting" | "duplicate";
+  status: "active" | "wasting" | "duplicate" | "cancelled" | "expired" | "trial";
   last_used: string;
   billing_date: string;
-  billing_frequency: "monthly" | "yearly";
+  billing_frequency: "monthly" | "yearly" | "trial";
   logo_url: string;
+  renewal_date?: string;
+  gmail_message_id?: string;
 }
 
 export default function Dashboard() {
   // Authentication & session states
-  const [auth, setAuth] = useState<{ authenticated: boolean; user: any } | null>(null);
+  const [auth, setAuth] = useState<{ authenticated: boolean; user: Record<string, unknown> | null } | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   // Database subscription state
@@ -46,8 +49,9 @@ export default function Dashboard() {
   const [detectedCount, setDetectedCount] = useState(0);
 
   // PDF statement uploader state
-  const [pdfFile, setPdfFile] = useState<string | null>(null);
+  const [, setPdfFile] = useState<string | null>(null);
   const [pdfScanState, setPdfScanState] = useState<"idle" | "uploading" | "scanning" | "found" | "done">("idle");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [scannedSubDetails, setScannedSubDetails] = useState<any>(null);
 
   // Gemini AI chat assistant state
@@ -70,7 +74,7 @@ export default function Dashboard() {
   const [newFreq, setNewFreq] = useState("monthly");
 
   // Subscription detail drawer selection state
-  const [selectedSub, setSelectedSub] = useState<any | null>(null);
+  const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
 
   // Gemini AI insights state
   const [aiInsights, setAiInsights] = useState<{
@@ -87,7 +91,7 @@ export default function Dashboard() {
     try {
       const res = await fetch("/api/auth/me");
       const data = await res.json();
-      setAuth(data);
+      setAuth(data.success ? data.data : { authenticated: false, user: null });
     } catch (e) {
       console.error("Auth me error:", e);
     } finally {
@@ -101,8 +105,8 @@ export default function Dashboard() {
     setLoadingSubs(true);
     try {
       const res = await fetch("/api/subscriptions");
-      const data = await res.json();
-      setSubscriptions(data.subscriptions || []);
+      const resData = await res.json();
+      setSubscriptions(resData.success && resData.data ? resData.data.subscriptions : []);
     } catch (e) {
       console.error("Fetch subscriptions error:", e);
     } finally {
@@ -135,13 +139,15 @@ export default function Dashboard() {
     if (auth?.authenticated) {
       fetchSubscriptions();
     }
-  }, [auth]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth?.authenticated]);
 
   useEffect(() => {
     if (auth?.authenticated) {
       fetchInsights();
     }
-  }, [subscriptions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subscriptions, auth?.authenticated]);
 
   // Handle Logout
   const handleLogout = async () => {
@@ -170,19 +176,19 @@ export default function Dashboard() {
       const res = await fetch("/api/scan/gmail", { method: "POST" });
       const data = await res.json();
       
-      if (res.ok && data.success) {
+      if (res.ok && data.success && data.data) {
         setScanProgress(80);
         setScanLogs(prev => [
           ...prev, 
-          `Scanned ${data.scannedCount} emails. Found ${data.foundCount} receipts.`,
-          `Added ${data.subscriptionsCount} new subscriptions to database.`,
-          `Skipped ${data.duplicatesIgnored} duplicate receipts.`
+          `Scanned ${data.data.scannedCount} emails. Found ${data.data.foundCount} receipts.`,
+          `Added ${data.data.subscriptionsCount} new subscriptions to database.`,
+          `Skipped ${data.data.duplicatesIgnored} duplicate receipts.`
         ]);
 
         setTimeout(() => {
           setScanState("finished");
           setScanProgress(100);
-          setDetectedCount(data.subscriptionsCount || 0);
+          setDetectedCount(data.data.subscriptionsCount || 0);
           fetchSubscriptions();
         }, 1000);
       } else {
@@ -258,12 +264,12 @@ export default function Dashboard() {
         
         setPdfScanState("scanning");
         setTimeout(() => {
-          if (data.success) {
-            setScannedSubDetails(data);
+          if (data.success && data.data) {
+            setScannedSubDetails(data.data);
             setPdfScanState("found");
           } else {
             setPdfScanState("idle");
-            alert(data.message || "No recurring subscriptions found in statement.");
+            alert(data.error || "No recurring subscriptions found in statement.");
           }
         }, 1500);
 
@@ -300,7 +306,7 @@ export default function Dashboard() {
         })
       });
       const data = await res.json();
-      setChatMessages(prev => [...prev, { sender: "ai", text: data.text }]);
+      setChatMessages(prev => [...prev, { sender: "ai", text: data.success && data.data ? data.data.text : (data.error || "An error occurred while contacting AI.") }]);
     } catch (e) {
       console.error("AI response error:", e);
     } finally {
@@ -330,37 +336,40 @@ Allan Carter`);
   };
 
   // Real-time calculated indicators
-  const totalMonthlySpend = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
-  const wastedMonthlySpend = subscriptions
-    .filter(sub => sub.status !== "active")
-    .reduce((sum, sub) => sum + sub.price, 0);
+  const totalMonthlySpend = useMemo(() => subscriptions.reduce((sum, sub) => sum + sub.price, 0), [subscriptions]);
   
-  const annualSpend = subscriptions.reduce((sum, sub) => {
+  const wastedMonthlySpend = useMemo(() => subscriptions
+    .filter(sub => sub.status !== "active")
+    .reduce((sum, sub) => sum + sub.price, 0), [subscriptions]);
+  
+  const annualSpend = useMemo(() => subscriptions.reduce((sum, sub) => {
     return sum + (sub.billing_frequency === "yearly" ? sub.price : sub.price * 12);
-  }, 0);
+  }, 0), [subscriptions]);
 
-  const healthScore = totalMonthlySpend === 0 ? 100 : Math.max(
+  const healthScore = useMemo(() => totalMonthlySpend === 0 ? 100 : Math.max(
     30, 
     Math.min(100, Math.round(100 - (wastedMonthlySpend / totalMonthlySpend) * 80))
-  );
+  ), [totalMonthlySpend, wastedMonthlySpend]);
 
   // Duplicate Check
-  const categoryCounts = subscriptions.reduce((acc: Record<string, string[]>, sub) => {
-    if (!acc[sub.category]) acc[sub.category] = [];
-    acc[sub.category].push(sub.name);
-    return acc;
-  }, {});
-  const duplicateAlerts = Object.entries(categoryCounts)
-    .filter(([_, names]) => names.length > 1)
-    .map(([cat, names]) => ({ category: cat, services: names }));
+  const duplicateAlerts = useMemo(() => {
+    const categoryCounts = subscriptions.reduce((acc: Record<string, string[]>, sub) => {
+      if (!acc[sub.category]) acc[sub.category] = [];
+      acc[sub.category].push(sub.name);
+      return acc;
+    }, {});
+    return Object.entries(categoryCounts)
+      .filter((entry) => entry[1].length > 1)
+      .map(([cat, names]) => ({ category: cat, services: names }));
+  }, [subscriptions]);
 
   // Filtered listing
-  const filteredSubs = subscriptions.filter(sub => {
+  const filteredSubs = useMemo(() => subscriptions.filter(sub => {
     const matchesSearch = sub.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           sub.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || sub.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [subscriptions, searchTerm, statusFilter]);
 
   // Loader screen
   if (loadingAuth) {
@@ -430,12 +439,12 @@ Allan Carter`);
       <aside className="w-full md:w-64 border-r border-white/5 bg-black/60 backdrop-blur-xl p-6 flex flex-col justify-between flex-shrink-0">
         <div className="space-y-8">
           <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-xl bg-gradient-to-r from-deep-red to-crimson flex items-center justify-center font-black text-white text-sm shadow-[0_0_12px_rgba(239,35,60,0.3)]">
                 S
               </div>
               <span className="font-extrabold text-base tracking-tight text-glow">SubSense</span>
-            </a>
+            </Link>
             <span className="text-[9px] uppercase tracking-wider bg-white/5 border border-white/10 px-2 py-0.5 rounded text-white/40">
               {isSupabaseConfigured ? "Live Cloud" : "Sandbox"}
             </span>
@@ -453,7 +462,7 @@ Allan Carter`);
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
+                  onClick={() => setActiveTab(item.id as "overview" | "subscriptions" | "assistant" | "statement")}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     activeTab === item.id 
                       ? "bg-gradient-to-r from-deep-red/10 to-transparent border-l-2 border-crimson text-white bg-white/[0.02]" 
@@ -472,11 +481,11 @@ Allan Carter`);
         <div className="mt-8 pt-4 border-t border-white/5 flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white uppercase">
-              {auth.user.name?.slice(0, 2) || "AC"}
+              {(auth.user?.name as string)?.slice(0, 2) || "AC"}
             </div>
             <div className="overflow-hidden flex-1">
-              <h4 className="text-xs font-bold text-white truncate">{auth.user.name}</h4>
-              <p className="text-[9px] text-white/40 truncate">{auth.user.email}</p>
+              <h4 className="text-xs font-bold text-white truncate">{auth.user?.name as string || "Demo User"}</h4>
+              <p className="text-[9px] text-white/40 truncate">{auth.user?.email as string || "demo@subsense.ai"}</p>
             </div>
           </div>
           <button
@@ -669,7 +678,7 @@ Allan Carter`);
                     </div>
                   ) : filteredSubs.length === 0 ? (
                     <div className="py-12 text-center text-xs text-white/40 italic">
-                      No discovered subscription logs. Trigger "Scan Gmail" to extract records.
+                      No discovered subscription logs. Trigger &quot;Scan Gmail&quot; to extract records.
                     </div>
                   ) : (
                     filteredSubs.slice(0, 5).map(sub => (
@@ -788,7 +797,7 @@ Allan Carter`);
                 ].map(tab => (
                   <button
                     key={tab.id}
-                    onClick={() => setStatusFilter(tab.id as any)}
+                    onClick={() => setStatusFilter(tab.id as "all" | "active" | "wasting" | "duplicate")}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer whitespace-nowrap transition ${
                       statusFilter === tab.id
                         ? "bg-crimson text-white"

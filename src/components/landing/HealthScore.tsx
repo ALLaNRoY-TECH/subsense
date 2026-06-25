@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Activity, ShieldAlert, Sparkles, Check, CheckCircle } from "lucide-react";
+import { Activity, ShieldAlert, Sparkles, Check } from "lucide-react";
 
 export default function HealthScore() {
   const score = 72;

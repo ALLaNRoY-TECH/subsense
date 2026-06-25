@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, ChevronRight, Bell, DollarSign } from "lucide-react";
+import { Calendar, Bell } from "lucide-react";
 
 interface TimelineItem {
   day: number;

@@ -1,0 +1,120 @@
+﻿
+> subsense-app@0.1.0 lint
+> eslint
+
+
+C:\Users\allan\Documents\project subscirpiton\src\app\api\auth\google\route.ts
+  3:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\app\api\insights\route.ts
+   73:53  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   74:39  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   75:58  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   76:54  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   80:70  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  270:59  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  271:45  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  272:58  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  290:49  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  294:50  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  303:9   error  'systemPrompt' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\allan\Documents\project subscirpiton\src\app\api\scan\gmail\route.ts
+    4:10  warning  'OAuth2Client' is defined but never used                 @typescript-eslint/no-unused-vars
+   68:28  warning  'request' is defined but never used                      @typescript-eslint/no-unused-vars
+  167:9   error    'scannedCount' is never reassigned. Use 'const' instead  prefer-const
+  171:9   error    'foundSubs' is never reassigned. Use 'const' instead     prefer-const
+  171:20  error    Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  179:62  error    Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+
+C:\Users\allan\Documents\project subscirpiton\src\app\api\scan\pdf\route.ts
+    3:1   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  144:41  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  146:34  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  149:26  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  184:21  warning  'insertData' is assigned a value but never used                                                                      @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\app\api\subscriptions\route.ts
+  120:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\allan\Documents\project subscirpiton\src\app\dashboard\page.tsx
+    6:25  warning  'Bell' is defined but never used                                                                                                                       @typescript-eslint/no-unused-vars
+    7:31  warning  'MessageSquare' is defined but never used                                                                                                              @typescript-eslint/no-unused-vars
+    7:46  warning  'ArrowLeft' is defined but never used                                                                                                                  @typescript-eslint/no-unused-vars
+   28:68  error    Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+   49:10  warning  'pdfFile' is assigned a value but never used                                                                                                           @typescript-eslint/no-unused-vars
+   51:62  error    Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+   73:50  error    Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+  138:6   warning  React Hook useEffect has a missing dependency: 'fetchSubscriptions'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  144:6   warning  React Hook useEffect has missing dependencies: 'auth?.authenticated' and 'fetchInsights'. Either include them or remove the dependency array           react-hooks/exhaustive-deps
+  354:15  warning  '_' is defined but never used                                                                                                                          @typescript-eslint/no-unused-vars
+  433:13  error    Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+  456:58  error    Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+  672:64  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                        react/no-unescaped-entities
+  672:75  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                        react/no-unescaped-entities
+  791:62  error    Unexpected any. Specify a different type                                                                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\allan\Documents\project subscirpiton\src\app\page.tsx
+    5:18  warning  'AnimatePresence' is defined but never used                      @typescript-eslint/no-unused-vars
+    7:73  warning  'X' is defined but never used                                    @typescript-eslint/no-unused-vars
+    7:76  warning  'ArrowUp' is defined but never used                              @typescript-eslint/no-unused-vars
+    7:85  warning  'DollarSign' is defined but never used                           @typescript-eslint/no-unused-vars
+    7:97  warning  'ShieldCheck' is defined but never used                          @typescript-eslint/no-unused-vars
+   76:10  warning  'showBackTop' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+   77:10  warning  'mobileMenuOpen' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   78:10  warning  'tickerAmt' is assigned a value but never used                   @typescript-eslint/no-unused-vars
+  178:79  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\allan\Documents\project subscirpiton\src\components\landing\BillingTimeline.tsx
+  5:20  warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+  5:40  warning  'DollarSign' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\components\landing\Calculator.tsx
+   4:10  warning  'motion' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   4:18  warning  'useMotionValue' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+   4:34  warning  'useTransform' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   5:34  warning  'Percent' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  18:6   warning  React Hook useEffect has a missing dependency: 'displayValue'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\allan\Documents\project subscirpiton\src\components\landing\DashboardPreview.tsx
+  119:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\allan\Documents\project subscirpiton\src\components\landing\GmailScan.tsx
+    5:61   warning  'AlertTriangle' is defined but never used                        @typescript-eslint/no-unused-vars
+  113:82   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  113:101  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  156:43   warning  'index' is defined but never used                                @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\components\landing\HealthScore.tsx
+  5:50  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\components\landing\RoastSlider.tsx
+  5:17  warning  'Sparkles' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\lib\subscription-logos.ts
+  1:8  warning  'React' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\allan\Documents\project subscirpiton\src\lib\supabase.ts
+   14:37  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   20:43  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   48:54  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   48:62  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   49:18  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   50:28  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   63:25  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   71:77  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   71:92  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   72:18  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   73:28  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   77:25  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   92:24  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   95:16  warning  'columns' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   99:24  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   99:30  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  110:24  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  110:30  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  114:26  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+Γ£û 82 problems (50 errors, 32 warnings)
+  3 errors and 0 warnings potentially fixable with the `--fix` option.
+

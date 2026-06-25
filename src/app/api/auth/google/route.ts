@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request) {
+export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri =
     process.env.NODE_ENV === "development"

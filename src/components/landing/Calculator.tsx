@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Calculator as CalcIcon, Percent, AlertTriangle, TrendingDown } from "lucide-react";
+import { animate } from "framer-motion";
+import { Calculator as CalcIcon, AlertTriangle, TrendingDown } from "lucide-react";
 
 // CountUp component to animate number counting
 function CountUp({ value }: { value: number }) {
@@ -15,6 +15,7 @@ function CountUp({ value }: { value: number }) {
       onUpdate: (latest) => setDisplayValue(Math.round(latest)),
     });
     return () => controls.stop();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return <span>₹{displayValue.toLocaleString("en-IN")}</span>;

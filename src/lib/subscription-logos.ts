@@ -1,5 +1,3 @@
-import React from "react";
-
 // Types
 export interface LogoAsset {
   svg: string;
