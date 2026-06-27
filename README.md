@@ -1,87 +1,331 @@
-# SubSense
+# 💳 SubSense
 
-![SubSense Hero](docs/hero-placeholder.png)
+> **Know where your money goes. Cancel what you don't need. Save more effortlessly.**
 
-SubSense is an AI-powered subscription management platform that connects securely to Gmail or scans bank statements to detect recurring subscriptions, calculate wasted spending, identify forgotten services, and generate AI-powered saving recommendations. Stop paying for what you don't use.
+SubSense is an AI-powered subscription intelligence platform that automatically discovers recurring subscriptions from Gmail receipts and bank statements, analyzes your spending habits, and provides personalized insights to help you save money.
 
-## Features
-- **Gmail Scanner**: Securely scans inbox receipts and identifies active subscriptions, hidden fees, and upcoming renewals.
-- **Bank Statement OCR**: Upload PDF bank statements to instantly extract recurring charges using AI-vision parsing.
-- **AI Financial Insights**: Get intelligent roast-style feedback and actionable recommendations on your subscription health.
-- **Duplicate Detection**: Automatically flags duplicate services (e.g., Netflix and Hulu) and recommends cuts.
-- **Premium UI**: Seamless, dark-mode futuristic dashboard with fluid glassmorphism and Framer Motion animations.
+Built with a security-first approach, SubSense combines modern web technologies, AI-powered analysis, and an intuitive user experience into a production-ready SaaS application.
 
-## Tech Stack
-- **Framework**: Next.js 16 (App Router), React 19
-- **Styling**: Tailwind CSS v4
-- **Animations**: Framer Motion
-- **Database/Auth**: Supabase (Mocked via LocalStorage for Sandbox)
-- **AI/LLM**: Google Gemini 1.5 Flash / 2.0 Pro
-- **Icons**: Lucide React
-- **Analytics**: Vercel Analytics & Speed Insights
+---
 
-## Screenshots
-| Dashboard | AI Insights | PDF Scanner |
-| :---: | :---: | :---: |
-| ![Dashboard](docs/dash-placeholder.png) | ![Insights](docs/insights-placeholder.png) | ![PDF Scanner](docs/scanner-placeholder.png) |
+## ✨ Features
 
-## Architecture Overview
-SubSense utilizes a frontend-heavy architecture with standard Next.js Route Handlers orchestrating backend logic. The UI relies on aggressive React `useMemo` caching to rapidly filter heavy financial datasets without dropping frames. Backend extraction leverages Google's Gemini Vision and Text LLM endpoints for asynchronous data structuring. (See `ARCHITECTURE.md` for deep dive).
+### 📧 Gmail Subscription Scanner
 
-## Installation
+* Secure Google OAuth 2.0 authentication
+* Scans Gmail receipts from the past 12 months
+* Automatically detects recurring subscriptions
+* Supports major services including:
+
+  * Netflix
+  * Spotify
+  * YouTube Premium
+  * ChatGPT Plus
+  * Amazon Prime
+  * Prime Video
+  * Canva
+  * Adobe Creative Cloud
+  * Google One
+  * Microsoft 365
+  * Apple Music
+  * Disney+ Hotstar
+* Groups duplicate payments
+* Calculates monthly and yearly spending
+
+---
+
+### 📄 Bank Statement Scanner
+
+Upload PDF bank statements and let SubSense identify recurring transactions.
+
+Supported Banks:
+
+* SBI
+* HDFC
+* ICICI
+* Axis Bank
+* Kotak Mahindra Bank
+
+Features:
+
+* Automatic transaction extraction
+* Subscription detection
+* Duplicate payment analysis
+* Spending categorization
+
+---
+
+### 🤖 AI Spending Insights
+
+Powered by **Google Gemini AI**.
+
+Receive:
+
+* Personalized spending summaries
+* Subscription health reports
+* Cost-saving recommendations
+* Spending behavior analysis
+* AI-generated financial insights
+
+---
+
+### 📊 Interactive Dashboard
+
+Monitor everything in one place.
+
+* Active subscriptions
+* Monthly spending
+* Annual spending projection
+* Subscription Health Meter
+* Savings Calculator
+* AI Insights Panel
+* Detailed Subscription Drawer
+
+---
+
+### 🎨 Beautiful Landing Page
+
+Modern SaaS landing page featuring:
+
+* Animated Hero Section
+* Interactive Savings Calculator
+* AI Feature Showcase
+* Glassmorphism UI
+* Smooth Framer Motion animations
+* Fully Responsive Design
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+* Next.js 15 (App Router)
+* React 19
+* TypeScript
+* Tailwind CSS v4
+* Framer Motion
+
+### Backend
+
+* Next.js API Routes
+* Supabase
+* Google OAuth 2.0
+
+### AI
+
+* Google Gemini API
+
+### Database
+
+* PostgreSQL (Supabase)
+
+### Authentication
+
+* Google OAuth
+* Secure Session Management
+
+### Deployment
+
+* Vercel
+
+---
+
+## 📂 Project Structure
+
+```text
+app/
+ ├── api/
+ │    ├── auth/
+ │    ├── scan/
+ │    ├── insights/
+ │    └── subscriptions/
+ ├── dashboard/
+ ├── components/
+ ├── lib/
+ ├── hooks/
+ └── utils/
+
+public/
+
+supabase/
+
+types/
+```
+
+---
+
+## 🚀 Getting Started
+
+### Clone the repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/yourusername/subsense.git
 
-# Navigate to directory
 cd subsense
+```
 
-# Install dependencies
+### Install dependencies
+
+```bash
 npm install
+```
 
-# Run the development server
+### Configure Environment Variables
+
+Create a `.env.local`
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+SUPABASE_SERVICE_ROLE_KEY=
+
+GOOGLE_CLIENT_ID=
+
+GOOGLE_CLIENT_SECRET=
+
+GOOGLE_REDIRECT_URI=
+
+GEMINI_API_KEY=
+```
+
+---
+
+### Run locally
+
+```bash
 npm run dev
 ```
-Navigate to `http://localhost:3000`.
 
-## Environment Variables
-Create a `.env.local` file in the root directory:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-GEMINI_API_KEY=your_gemini_api_key
+Open:
+
 ```
-*Note: If Supabase keys are excluded, the app boots into Local Storage Sandbox mode.*
-
-## Folder Structure
-```text
-src/
-├── app/
-│   ├── api/          # Next.js Route Handlers (Auth, Scan, Insights)
-│   ├── dashboard/    # Main User Application Boundary
-│   ├── layout.tsx    # Root Layout & Analytics
-│   └── page.tsx      # Landing Page
-├── components/
-│   └── landing/      # Landing Page UI Components
-├── lib/
-│   ├── supabase.ts   # Supabase Client & Local Mock
-│   └── subscription-logos.ts
+http://localhost:3000
 ```
 
-## Deployment
-SubSense is optimized for Vercel deployment:
+---
+
+## 🔐 Security
+
+SubSense is built with security as a priority.
+
+* Google OAuth Authentication
+* Secure Session Management
+* Server-side API Routes
+* Environment Variable Protection
+* SQL Injection Protection
+* Input Validation
+* Secure PDF Processing
+* No Gmail credentials stored
+
+---
+
+## 📈 Roadmap
+
+* [x] Landing Page
+* [x] Google OAuth
+* [x] Gmail Subscription Scanner
+* [x] Bank Statement Scanner
+* [x] AI Spending Insights
+* [x] Interactive Dashboard
+* [x] Responsive UI
+* [ ] Email Notifications
+* [ ] Auto Subscription Renewal Alerts
+* [ ] Subscription Cancellation Assistant
+* [ ] Multi-Currency Support
+* [ ] Mobile Application
+* [ ] Expense Forecasting
+* [ ] Budget Planning
+* [ ] Family Accounts
+
+---
+
+## 📸 Screenshots
+
+| Landing Page   | Dashboard      |
+| -------------- | -------------- |
+| Add Screenshot | Add Screenshot |
+
+| Gmail Scanner  | AI Insights    |
+| -------------- | -------------- |
+| Add Screenshot | Add Screenshot |
+
+---
+
+## ⚡ Performance
+
+* ⚡ Next.js App Router
+* ⚡ Server Components
+* ⚡ Lazy Loading
+* ⚡ Optimized Images
+* ⚡ Fast Page Transitions
+* ⚡ Production Optimized
+* ⚡ TypeScript Strict Mode
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create a new branch
+
 ```bash
-npm run build
-npm run start
+git checkout -b feature/amazing-feature
 ```
-Connect your GitHub repository to Vercel and ensure environment variables are configured in the Vercel dashboard.
 
-## Future Roadmap
-- [ ] Migrate heavy PDF OCR processing to Inngest background queues.
-- [ ] Implement true cryptographic JWT verification on the server.
-- [ ] Refactor dashboard monolith into micro-components.
-- [ ] Support Plaid OAuth for direct bank feed integration.
+3. Commit your changes
 
-## License
-MIT License. See `LICENSE` for more information.
+```bash
+git commit -m "Add amazing feature"
+```
+
+4. Push
+
+```bash
+git push origin feature/amazing-feature
+```
+
+5. Open a Pull Request
+
+---
+
+## 👨‍💻 Author
+
+**Allan Roy**
+
+Cybersecurity & Full Stack Developer
+
+* Building secure, AI-powered SaaS applications
+* Passionate about Web Security, AI, and Modern Web Development
+
+---
+
+## ⭐ Support
+
+If you found this project useful:
+
+⭐ Star the repository
+
+🍴 Fork it
+
+🛠️ Contribute
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+
+### 💙 Built with Next.js • TypeScript • Supabase • Gemini AI
+
+**Helping users save money, one subscription at a time.**
+
+</div>
